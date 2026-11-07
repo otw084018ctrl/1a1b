@@ -1,0 +1,7 @@
+{
+  "name": "1a1b",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "start": "node 1a1b-server.js" },
+  "engines": { "node": ">=18" }
+}
