@@ -7,12 +7,18 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = Number(process.env.PORT) || 3000;
-const SET_OPTIONS = [10, 20, 30];  // 1 對 1 設定數字時間（秒）
-const TURN_OPTIONS = [0, 40, 60];  // 每回合時間（秒），0 = 不限
+const envList = (k, d) => (process.env[k] ? process.env[k].split(',').map(Number) : d);
+const SET_OPTIONS = envList('SET_OPTIONS', [10, 20, 30]);  // 1 對 1 設定數字時間（秒）
+const TURN_OPTIONS = envList('TURN_OPTIONS', [0, 40, 60]); // 每回合時間（秒），0 = 不限
 const MAX = { duel: 2, race: 8 };  // 各玩法人數上限
 const MAX_SPECS = 30;
 const CHAT_MAX = 60;
 const IDLE_MS = 10 * 60 * 1000;    // 房間沒人在線超過這個時間就關掉
+const MAX_ROOMS = 200;
+const GRACE_MS = Number(process.env.GRACE_MS) || 8000;            // 短暫斷線不算缺席
+const DROP_WAIT_MS = Number(process.env.DROP_WAIT_MS) || 20000;   // 等待/結算時離線多久就移出房間
+const DROP_GAME_MS = Number(process.env.DROP_GAME_MS) || 90000;   // 對局中離線多久就判離開
+const DROP_SPEC_MS = Number(process.env.DROP_SPEC_MS) || 30000;   // 觀戰者離線多久就移出
 const rooms = new Map();
 const PAGE = fs.readFileSync(path.join(__dirname, 'page.html'), 'utf8'); // 前端頁面
 
@@ -63,6 +69,8 @@ function cleanSettings(src, base) {
   if (src.hint === 'normal' || src.hint === 'easy') s.hint = src.hint;
   if (SET_OPTIONS.includes(Number(src.setSec))) s.setSec = Number(src.setSec);
   if (TURN_OPTIONS.includes(Number(src.turnSec))) s.turnSec = Number(src.turnSec);
+  if (src.peek === 'on' || src.peek === 'off') s.peek = src.peek;
+  if (s.game === 'race' && !s.turnSec) s.turnSec = 60; // 多人競速不能不限時，一個人發呆全場都在等
   return s;
 }
 
@@ -96,6 +104,7 @@ function startGame(room) {
   room.result = null;
   room.lastChance = false;
   for (const p of room.players) { p.secret = null; p.auto = false; p.out = false; p.guesses = []; }
+  room.lastIds = new Set(room.players.map(p => p.id));
   if (room.settings.game === 'duel') {
     room.starter = room.players[room.flip % 2].id; // 先後手每局交換
     room.flip++;
@@ -155,6 +164,7 @@ function afterDuelMove(room, p, a) {
 
 // ---------- 多人競速 ----------
 const active = room => room.players.filter(p => !p.out);
+const present = p => !!p.res || Date.now() - p.offAt < GRACE_MS;
 function nextRound(room) {
   room.round++;
   room.submitted = new Set();
@@ -167,8 +177,8 @@ function armRound(room) {
 function maybeEndRound(room) {
   if (room.phase !== 'playing' || room.settings.game !== 'race') return;
   const act = active(room);
-  // 在線的人都送出了就結算；離線的人不等
-  if (act.some(p => p.res) && act.every(p => room.submitted.has(p.id) || !p.res)) endRound(room);
+  // 送出的人都到齊就結算；斷線超過寬限時間的人不等，剛斷線的人還是會等
+  if (act.some(p => p.res) && act.every(p => room.submitted.has(p.id) || !present(p))) endRound(room);
 }
 function endRound(room) {
   const act = active(room);
@@ -188,16 +198,19 @@ function checkRaceLeft(room) {
 function view(room, viewer) {
   const spec = viewer.role === 'spec';
   const g = room.settings.game;
-  const over = room.phase === 'over';
+  const peek = room.settings.peek === 'on';
+  // 這局結束後才加入的玩家沒參與過，看到的是等待畫面，不是上一局的結果
+  const late = room.phase === 'over' && !spec && !room.lastIds.has(viewer.id);
+  const phase = late ? 'waiting' : room.phase;
+  const over = phase === 'over';
   const pubOf = id => { const p = room.players.find(x => x.id === id); return p ? p.pub : null; };
+  // 多人競速：別人的數字看不到，只看已結算回合的 A/B（房主沒開放時，觀戰者也一樣）
+  const hideRace = g === 'race' && !over && !(spec && peek);
   const players = room.players.map(p => {
     const mine = p.id === viewer.id;
     let guesses = p.guesses;
-    if (g === 'race' && !mine && !spec && !over) {
-      // 多人競速：別人的數字看不到，只看已結算回合的 A/B
-      guesses = p.guesses.filter(x => x.round < room.round).map(x => x.timeout ? { timeout: true } : { a: x.a, b: x.b });
-    }
-    const showSecret = mine || over || (spec && g === 'duel');
+    if (hideRace && !mine) guesses = p.guesses.filter(x => x.round < room.round).map(x => x.timeout ? { timeout: true } : { a: x.a, b: x.b });
+    const showSecret = mine || over || (spec && peek);
     return {
       pub: p.pub, name: p.name, online: !!p.res, host: room.host === p.id, me: mine,
       secret: showSecret ? p.secret : null, ready: !!p.secret, auto: mine && p.auto,
@@ -208,7 +221,7 @@ function view(room, viewer) {
   return {
     code: room.code,
     name: room.name,
-    phase: room.phase,
+    phase,
     settings: room.settings,
     max: MAX[g],
     me: { pub: viewer.pub, role: viewer.role, host: room.host === viewer.id, name: viewer.name },
@@ -218,7 +231,7 @@ function view(room, viewer) {
     starter: g === 'duel' && inGame(room) ? pubOf(room.starter) : null,
     lastChance: !!room.lastChance,
     round: g === 'race' ? room.round || 0 : 0,
-    answer: g === 'race' && (spec || over) ? room.secret : null,
+    answer: g === 'race' && (over || (spec && peek)) ? room.secret : null,
     msLeft: room.deadline ? Math.max(0, room.deadline - Date.now()) : 0,
     msTotal: room.total || 0,
     paused: !!room.paused,
@@ -253,7 +266,7 @@ function findMember(room, id) {
   return room.players.find(p => p.id === id) || room.specs.find(s => s.id === id);
 }
 function newMember(name, role) {
-  return { id: crypto.randomUUID(), pub: shortId(), name, role, res: null, lastChat: 0, secret: null, auto: false, out: false, guesses: [] };
+  return { id: crypto.randomUUID(), pub: shortId(), name, role, res: null, offAt: 0, dropTimer: null, lastChat: 0, secret: null, auto: false, out: false, guesses: [] };
 }
 
 // ---------- API ----------
@@ -275,11 +288,13 @@ const api = {
     name = cleanText(name, 12);
     let room;
     if (!code) {
+      if (rooms.size >= MAX_ROOMS) throw new Error('目前房間太多了，請晚點再試');
       code = newRoomCode();
       room = {
-        code, name: cleanText(roomName, 16), players: [], specs: [], host: null, flip: 0,
+        code, name: cleanText(roomName, 16), players: [], specs: [], host: null,
+        flip: crypto.randomInt(2), lastIds: new Set(), // 1 對 1 第一局誰先手是隨機的
         phase: 'waiting', chat: [], chatSeq: 0, created: Date.now(), idleSince: Date.now(),
-        settings: cleanSettings(settings || {}, { game: 'duel', hint: 'normal', setSec: 10, turnSec: 0 }),
+        settings: cleanSettings(settings || {}, { game: 'duel', hint: 'normal', setSec: 10, turnSec: 0, peek: 'off' }),
       };
       rooms.set(code, room);
       role = 'player';
@@ -396,14 +411,17 @@ const memberApi = {
     return { ok: true };
   },
   leave(_, room, m) {
+    if (!members(room).includes(m)) return { ok: true };
+    clearTimeout(m.dropTimer);
     if (m.res) { m.res.end(); m.res = null; }
     if (m.role === 'spec') room.specs.splice(room.specs.indexOf(m), 1);
     else {
       const wasIn = inGame(room);
       room.players.splice(room.players.indexOf(m), 1);
-      if (wasIn && room.settings.game === 'duel') finish(room, room.players.map(p => p.id), 'left', null);
-      else if (wasIn) checkRaceLeft(room);
-      if (room.result && room.result.reason === 'left') room.result.byName = m.name;
+      if (wasIn && room.settings.game === 'duel') {
+        finish(room, room.players.map(p => p.id), 'left', null);
+        room.result.byName = m.name;
+      } else if (wasIn) checkRaceLeft(room);
       if (room.host === m.id) room.host = room.players[0] ? room.players[0].id : null;
     }
     if (!members(room).length) { closeRoom(room); return { ok: true }; }
@@ -411,6 +429,19 @@ const memberApi = {
     return { ok: true };
   },
 };
+
+// 離線太久的人自動請出房間（房主離線時，房主會交給下一位），不然對局會一直卡住
+function scheduleDrop(room, m, ms) {
+  clearTimeout(m.dropTimer);
+  const need = () => (m.role === 'spec' ? DROP_SPEC_MS : inGame(room) ? DROP_GAME_MS : DROP_WAIT_MS);
+  if (ms === undefined) ms = need();
+  m.dropTimer = setTimeout(() => {
+    if (m.res || rooms.get(room.code) !== room || !members(room).includes(m)) return;
+    const left = need() - (Date.now() - m.offAt); // 離線期間剛好開局的話，按局內的時間再多等一下
+    if (left > 500) return scheduleDrop(room, m, left);
+    memberApi.leave(null, room, m);
+  }, ms);
+}
 
 // 沒人在線太久的房間自動關掉
 setInterval(() => {
@@ -447,17 +478,21 @@ http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
     if (m.res) m.res.end();
     m.res = res;
+    m.offAt = 0;
+    clearTimeout(m.dropTimer);
     if (m.role === 'player') resume(room);
     broadcast(room);
     const ping = setInterval(() => res.write(': ping\n\n'), 20000);
     req.on('close', () => {
       clearInterval(ping);
-      if (m.res === res) {
-        m.res = null;
-        if (!anyOnline(room)) room.idleSince = Date.now();
-        maybeEndRound(room); // 等的人離線了，就不用再等他
-        broadcast(room);
-      }
+      if (m.res !== res) return;
+      m.res = null;
+      m.offAt = Date.now();
+      if (!anyOnline(room)) room.idleSince = Date.now();
+      scheduleDrop(room, m);
+      // 寬限時間過了還沒回來，競速就不再等他
+      setTimeout(() => { if (rooms.get(room.code) === room) { maybeEndRound(room); broadcast(room); } }, GRACE_MS + 200);
+      broadcast(room);
     });
     return;
   }

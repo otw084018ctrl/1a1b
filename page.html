@@ -282,6 +282,7 @@ input.need{border-color:var(--warn)}
     <input id="roomName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" enterkeyhint="done" aria-label="房間名稱">
     <div class="field"><span>玩法</span><div class="seg" id="segGame"></div></div>
     <div class="field"><span>提示</span><div class="seg" id="segHint"></div></div>
+    <div class="field"><span>觀戰看答案</span><div class="seg" id="segPeek"></div></div>
     <div class="field" id="fieldSet"><span>設定數字</span><div class="seg" id="segSet"></div></div>
     <div class="field"><span>每回合思考</span><div class="seg" id="segTurn"></div></div>
     <button type="button" class="btn primary" id="createBtn">建立房間</button>
@@ -411,6 +412,7 @@ input.need{border-color:var(--warn)}
         <input id="sName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" aria-label="房間名稱">
         <div class="field"><span>玩法</span><div class="seg" id="sGame"></div></div>
         <div class="field"><span>提示</span><div class="seg" id="sHint"></div></div>
+        <div class="field"><span>觀戰看答案</span><div class="seg" id="sPeek"></div></div>
         <div class="field" id="sFieldSet"><span>設定數字</span><div class="seg" id="sSet"></div></div>
         <div class="field"><span>每回合思考</span><div class="seg" id="sTurn"></div></div>
         <div class="msg" id="sMsg"></div>
@@ -473,11 +475,22 @@ const pick = (key, opts) => { const v = LS.get(key); return opts.map(String).inc
 function lobbySeg(id, key, opts, fmt, after) {
   seg($(id), opts, fmt, pick(key, opts), v => { LS.set(key, v); if (after) after(); });
 }
-const syncLobby = () => show('fieldSet', $('segGame').dataset.val === 'duel');
+const turnOpts = game => game === 'race' ? [40, 60] : [0, 40, 60]; // 多人競速不能不限時，不然一個人發呆全場都在等
+const fmtTurn = o => o ? o + ' 秒' : '不限';
+function buildTurn(el, game, want, onChange) {
+  const v = turnOpts(game).map(String).includes(String(want)) ? String(want) : (game === 'race' ? '60' : '0');
+  seg(el, turnOpts(game), fmtTurn, v, onChange);
+}
+const syncLobby = () => {
+  const game = $('segGame').dataset.val;
+  show('fieldSet', game === 'duel');
+  buildTurn($('segTurn'), game, LS.get('1a1b-turn2'), v => LS.set('1a1b-turn2', v));
+};
+const fmtPeek = o => o === 'on' ? '可以' : '不可';
 lobbySeg('segGame', '1a1b-game', ['duel', 'race'], o => GAME_LABEL[o], syncLobby);
 lobbySeg('segHint', '1a1b-mode', ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準');
+lobbySeg('segPeek', '1a1b-peek', ['off', 'on'], fmtPeek);
 lobbySeg('segSet', '1a1b-set', [10, 20, 30], o => o + ' 秒');
-lobbySeg('segTurn', '1a1b-turn2', [0, 40, 60], o => o ? o + ' 秒' : '不限');
 syncLobby();
 $('name').value = LS.get('1a1b-name') || '';
 $('invNameIn').value = LS.get('1a1b-name') || '';
@@ -499,7 +512,7 @@ async function enter(code, role, nameIn, msgEl) {
     const j = await post('join', {
       room: code, name, role, pid: code ? SS.get('1a1b-pid-' + code) : null,
       roomName: $('roomName').value,
-      settings: { game: $('segGame').dataset.val, hint: $('segHint').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val },
+      settings: { game: $('segGame').dataset.val, hint: $('segHint').dataset.val, peek: $('segPeek').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val },
     });
     room = j.room; pid = j.pid;
     SS.set('1a1b-pid-' + room, pid);
@@ -736,17 +749,22 @@ function openSettings() {
   const st = S.settings;
   $('sName').value = S.name || '';
   $('sMsg').textContent = '';
-  const sync = () => show('sFieldSet', $('sGame').dataset.val === 'duel');
+  let want = st.turnSec;
+  const sync = () => {
+    const game = $('sGame').dataset.val;
+    show('sFieldSet', game === 'duel');
+    buildTurn($('sTurn'), game, want, v => { want = v; });
+  };
   seg($('sGame'), ['duel', 'race'], o => GAME_LABEL[o], st.game, sync);
   seg($('sHint'), ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準', st.hint);
+  seg($('sPeek'), ['off', 'on'], fmtPeek, st.peek);
   seg($('sSet'), [10, 20, 30], o => o + ' 秒', st.setSec);
-  seg($('sTurn'), [0, 40, 60], o => o ? o + ' 秒' : '不限', st.turnSec);
   sync();
   show('setWrap', true);
 }
 $('sSave').onclick = async () => {
   try {
-    await act('settings', { patch: { roomName: $('sName').value, game: $('sGame').dataset.val, hint: $('sHint').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
+    await act('settings', { patch: { roomName: $('sName').value, game: $('sGame').dataset.val, hint: $('sHint').dataset.val, peek: $('sPeek').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
     closePanels();
   } catch (e) { $('sMsg').textContent = e.message; }
 };
@@ -829,12 +847,13 @@ function resultHTML(g) {
   return g.a === 0 && g.b === 0 ? '<span class="zero">0A0B</span>' : '<span class="ra">' + g.a + 'A</span><span class="rb">' + g.b + 'B</span>';
 }
 function digitsHTML(g) {
+  if (!g.guess) return '••••'; // 數字被隱藏時（觀戰者沒開放看答案）
   return g.pos ? g.guess.split('').map((d, k) => g.pos.includes(k) ? '<span class="hit">' + d + '</span>' : d).join('') : g.guess;
 }
 // 答案顯示：自己的直接顯示；觀戰者看別人的有小眼睛可切換
 function secretHTML(value, masked) {
   if (!value) return '';
-  if (!masked) return '<em>' + value + '</em>';
+  if (!masked) return '<span class="secret"><em>' + value + '</em></span>';
   return '<span class="secret"><em>' + (reveal ? value : '••••') + '</em><button type="button" class="eye" data-eye aria-label="' + (reveal ? '隱藏答案' : '顯示答案') + '">' + (reveal ? EYE_OFF : EYE) + '</button></span>';
 }
 document.addEventListener('click', e => {
@@ -859,7 +878,7 @@ function renderDuel(s) {
   const R = spec ? s.players[1] : duelOpp(s);
   if (!L || !R) { $('bhead').innerHTML = ''; $('rows').innerHTML = ''; return; }
   $('bhead').innerHTML = spec
-    ? '<span></span><span class="me">' + esc(L.name) + ' 猜 ' + secretHTML(R.secret, true) + '</span><span>' + esc(R.name) + ' 猜 ' + secretHTML(L.secret, true) + '</span>'
+    ? '<span></span><span class="me">' + esc(L.name) + ' 猜 ' + secretHTML(R.secret, s.phase !== 'over') + '</span><span>' + esc(R.name) + ' 猜 ' + secretHTML(L.secret, s.phase !== 'over') + '</span>'
     : '<span></span><span class="me">我猜對手</span><span>對手猜我 ' + secretHTML(L.secret, false) + '</span>';
   const a = L.guesses, b = R.guesses;
   const total = a.length + b.length;
@@ -894,7 +913,8 @@ function renderRace(s) {
   const spec = isSpec(s);
   const won = p => s.result && s.result.winners.includes(p.pub);
   let html = '';
-  if (spec && s.answer) html += '<div class="answer"><span>這局的答案</span>' + secretHTML(s.answer, true) + '</div>';
+  if (spec) html += s.answer ? '<div class="answer"><span>這局的答案</span>' + secretHTML(s.answer, s.phase !== 'over') + '</div>'
+    : (s.phase === 'playing' ? '<div class="answer"><span>答案</span><span>房主沒開放觀戰看答案</span></div>' : '');
 
   if (spec) {
     // 觀戰：每位玩家一段，看得到每次猜的數字
@@ -932,7 +952,7 @@ function renderRace(s) {
 function renderWait(s) {
   const st = s.settings;
   $('bigCode').textContent = s.code;
-  $('chips').innerHTML = [GAME_LABEL[st.game], hintLabel(st.hint), st.game === 'duel' ? '設定數字 ' + st.setSec + ' 秒' : '', turnLabel(st.turnSec)]
+  $('chips').innerHTML = [GAME_LABEL[st.game], hintLabel(st.hint), st.game === 'duel' ? '設定數字 ' + st.setSec + ' 秒' : '', turnLabel(st.turnSec), st.peek === 'on' ? '觀戰可看答案' : '']
     .filter(Boolean).map(t => '<span class="chip">' + t + '</span>').join('');
   let rows = s.players.map(p => '<div class="prow"><span class="dot' + (p.online ? ' on' : '') + '"></span><span class="nm">' + esc(p.name) + (p.me ? '<small>（你）</small>' : '') + '</span>'
     + (p.host ? '<span class="tag host">房主</span>' : '') + '</div>').join('');
@@ -1079,7 +1099,7 @@ function render() {
   // 頂部投降 / 離開
   const q = $('quitBtn');
   if (!q.classList.contains('arm')) q.textContent = me && !me.out && (s.phase === 'setting' || playing) ? '投降' : '離開';
-  show('quitBtn', !over);
+  show('quitBtn', !(over && !spec)); // 玩家結算時用下面的按鈕離開，觀戰者用這顆
 
   // 底部
   show('entry', !!mode);
