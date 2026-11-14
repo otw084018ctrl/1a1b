@@ -57,7 +57,7 @@ input.need{border-color:var(--warn)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;color:var(--mute)}
 .tag{font-size:11px;border:1px solid currentColor;border-radius:5px;padding:0 6px;letter-spacing:.04em;flex:none;line-height:18px}
-.tag.easy{color:var(--a)}.tag.multi{color:var(--me)}.tag.host{color:var(--b)}.tag.spec{color:var(--mute)}
+.tag.easy{color:var(--a)}.tag.multi{color:var(--me)}.tag.host{color:var(--b)}.tag.five{color:var(--b)}.tag.spec{color:var(--mute)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
 .dot.on{background:var(--a)}
 .textbtn{border:0;background:none;padding:6px 2px;font-size:14px;color:var(--mute);position:relative}
@@ -215,12 +215,16 @@ input.need{border-color:var(--warn)}
 /* 底部數字盤 */
 .dock{background:var(--surface);border-top:1px solid var(--line);padding:12px 12px max(12px,env(safe-area-inset-bottom))}
 .slots{display:flex;justify-content:center;gap:8px;margin-bottom:10px}
-.slot{width:44px;height:50px;border-radius:9px;background:var(--sunk);display:grid;place-items:center;font:600 24px var(--mono);border:1.5px solid transparent}
+.slot{width:44px;height:50px;border-radius:9px;background:var(--sunk);display:grid;place-items:center;font:600 24px var(--mono);border:1.5px solid transparent;padding:0;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.slot.on{background:var(--me-soft)}
 .slot.cur{border-color:var(--ink)}
 .keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .keys button{height:48px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font:500 20px var(--mono);padding:0}
 .keys button:active:not(:disabled){background:var(--sunk)}
 .keys button:disabled{color:var(--faint);opacity:.55}
+.keys button.used:not(:disabled){color:var(--faint)}
+.cell.me[data-guess]{cursor:pointer}
+.cell.me[data-guess]:active{filter:brightness(.96)}
 .keys .del{font-family:var(--sans);font-size:18px}
 .keys .go{background:var(--ink);color:var(--bg);border-color:var(--ink);font:600 15px var(--sans)}
 .keys .go:disabled{background:var(--sunk);color:var(--faint);border-color:var(--line);opacity:1}
@@ -272,7 +276,7 @@ input.need{border-color:var(--warn)}
 <!-- 大廳 -->
 <section id="lobby" class="screen lobby">
   <div class="mark">1<i>A</i>1<u>B</u></div>
-  <p class="rules">猜出 4 位數，數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先猜到 4A 的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。</p>
+  <p class="rules">猜出 4 或 5 位數（開房時選），數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先全部猜對（4A 或 5A）的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。</p>
   <div class="group" style="border-top:0;padding-top:0">
     <label class="glabel" for="name">你的名字</label>
     <input id="name" maxlength="12" placeholder="輸入暱稱" autocomplete="off" enterkeyhint="done">
@@ -281,6 +285,7 @@ input.need{border-color:var(--warn)}
     <div class="glabel">開新房間</div>
     <input id="roomName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" enterkeyhint="done" aria-label="房間名稱">
     <div class="field"><span>玩法</span><div class="seg" id="segGame"></div></div>
+    <div class="field"><span>位數</span><div class="seg" id="segDigits"></div></div>
     <div class="field"><span>提示</span><div class="seg" id="segHint"></div></div>
     <div class="field"><span>觀戰看答案</span><div class="seg" id="segPeek"></div></div>
     <div class="field" id="fieldSet"><span>設定數字</span><div class="seg" id="segSet"></div></div>
@@ -325,7 +330,7 @@ input.need{border-color:var(--warn)}
 <!-- 遊戲 -->
 <section id="game" class="screen hide">
   <header class="bar">
-    <div class="left"><span class="title" id="roomTitle"></span><span class="code" id="roomCode"></span><span class="tag multi hide" id="tagRace">多人</span><span class="tag easy hide" id="tagEasy">簡單</span></div>
+    <div class="left"><span class="title" id="roomTitle"></span><span class="code" id="roomCode"></span><span class="tag multi hide" id="tagRace">多人</span><span class="tag easy hide" id="tagEasy">簡單</span><span class="tag five hide" id="tagFive">5 位</span></div>
     <div class="right">
       <button type="button" class="textbtn" id="chatBtn">聊天<span class="badge hide" id="badge"></span></button>
       <button type="button" class="textbtn" id="quitBtn">投降</button>
@@ -411,6 +416,7 @@ input.need{border-color:var(--warn)}
       <div class="pbody">
         <input id="sName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" aria-label="房間名稱">
         <div class="field"><span>玩法</span><div class="seg" id="sGame"></div></div>
+        <div class="field"><span>位數</span><div class="seg" id="sDigits"></div></div>
         <div class="field"><span>提示</span><div class="seg" id="sHint"></div></div>
         <div class="field"><span>觀戰看答案</span><div class="seg" id="sPeek"></div></div>
         <div class="field" id="sFieldSet"><span>設定數字</span><div class="seg" id="sSet"></div></div>
@@ -442,11 +448,19 @@ const EYE_OFF = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5
 
 const GAME_LABEL = { duel: '1 對 1', race: '多人競速' };
 const hintLabel = h => h === 'easy' ? '簡單模式' : '標準模式';
+const digitsLabel = n => n + ' 位數';
 const turnLabel = t => t ? '每回合 ' + t + ' 秒' : '不限時';
 const roomTitle = (name, host) => name || (host ? host + ' 的房間' : '1A1B');
 
 let S = null, room = null, pid = null, es = null;
-let entry = '', mode = null, sending = false, canGuess = false;
+// 內容沒變就不重畫，避免手指點到一半元素被換掉而點不到
+function setHTML(el, h) { if (el.__h !== h) { el.innerHTML = h; el.__h = h; } }
+let slots = [], sel = 0, mode = null, sending = false, canGuess = false;
+const N = () => (S && S.settings && S.settings.digits) || 4;
+const entryStr = () => slots.join('');
+const entryEmpty = () => slots.every(x => !x);
+function resetEntry() { slots = Array(N()).fill(''); sel = 0; }
+resetEntry();
 let deadline = 0, total = 0;
 let reveal = LS.get('1a1b-reveal') === '1';
 const qs = new URLSearchParams(location.search);
@@ -475,19 +489,21 @@ const pick = (key, opts) => { const v = LS.get(key); return opts.map(String).inc
 function lobbySeg(id, key, opts, fmt, after) {
   seg($(id), opts, fmt, pick(key, opts), v => { LS.set(key, v); if (after) after(); });
 }
-const turnOpts = game => game === 'race' ? [40, 60] : [0, 40, 60]; // 多人競速不能不限時，不然一個人發呆全場都在等
+const turnOpts = (game, digits) => game === 'race' ? (digits === '5' ? [60, 90] : [40, 60]) : (digits === '5' ? [0, 60, 90] : [0, 40, 60]); // 多人競速不能不限時，不然一個人發呆全場都在等
 const fmtTurn = o => o ? o + ' 秒' : '不限';
-function buildTurn(el, game, want, onChange) {
-  const v = turnOpts(game).map(String).includes(String(want)) ? String(want) : (game === 'race' ? '60' : '0');
-  seg(el, turnOpts(game), fmtTurn, v, onChange);
+function buildTurn(el, game, digits, want, onChange) {
+  const opts = turnOpts(game, String(digits)), w = Number(want) || 0;
+  const v = String(opts.includes(w) ? w : opts.reduce((b, x) => (Math.abs(x - (w || 60)) < Math.abs(b - (w || 60)) ? x : b), opts[0]));
+  seg(el, opts, fmtTurn, v, onChange);
 }
 const syncLobby = () => {
   const game = $('segGame').dataset.val;
   show('fieldSet', game === 'duel');
-  buildTurn($('segTurn'), game, LS.get('1a1b-turn2'), v => LS.set('1a1b-turn2', v));
+  buildTurn($('segTurn'), game, $('segDigits').dataset.val, LS.get('1a1b-turn2'), v => LS.set('1a1b-turn2', v));
 };
 const fmtPeek = o => o === 'on' ? '可以' : '不可';
 lobbySeg('segGame', '1a1b-game', ['duel', 'race'], o => GAME_LABEL[o], syncLobby);
+lobbySeg('segDigits', '1a1b-digits', [4, 5], o => o + ' 位', syncLobby);
 lobbySeg('segHint', '1a1b-mode', ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準');
 lobbySeg('segPeek', '1a1b-peek', ['off', 'on'], fmtPeek);
 lobbySeg('segSet', '1a1b-set', [10, 20, 30], o => o + ' 秒');
@@ -512,7 +528,7 @@ async function enter(code, role, nameIn, msgEl) {
     const j = await post('join', {
       room: code, name, role, pid: code ? SS.get('1a1b-pid-' + code) : null,
       roomName: $('roomName').value,
-      settings: { game: $('segGame').dataset.val, hint: $('segHint').dataset.val, peek: $('segPeek').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val },
+      settings: { game: $('segGame').dataset.val, digits: $('segDigits').dataset.val, hint: $('segHint').dataset.val, peek: $('segPeek').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val },
     });
     room = j.room; pid = j.pid;
     SS.set('1a1b-pid-' + room, pid);
@@ -540,7 +556,7 @@ async function loadRooms() {
   try { list = (await post('rooms')).rooms; } catch (e) { return; }
   $('rlist').innerHTML = list.length ? list.map(r => {
     const state = r.phase === 'setting' || r.phase === 'playing' ? '對戰中' : r.players + '/' + r.max + ' 人';
-    const meta = [GAME_LABEL[r.settings.game], state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
+    const meta = [GAME_LABEL[r.settings.game], (r.settings.digits || 4) === 5 ? '5 位數' : '', state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
     return '<div class="ritem"><div class="info"><div class="nm">' + esc(roomTitle(r.name, r.host)) + '<span class="cd">' + r.code + '</span></div>'
       + '<div class="meta">' + esc(meta) + '</div></div><div class="acts">'
       + '<button type="button" data-code="' + r.code + '" data-role="spec">觀戰</button>'
@@ -566,7 +582,7 @@ async function openInvite(code) {
   $('invHost').textContent = (info.host || '朋友') + ' 邀請你加入';
   $('invName').textContent = roomTitle(info.name, info.host);
   $('invCode').textContent = '房間 ' + info.code;
-  $('invChips').innerHTML = [GAME_LABEL[info.settings.game], hintLabel(info.settings.hint), turnLabel(info.settings.turnSec), info.players + '/' + info.max + ' 人']
+  $('invChips').innerHTML = [GAME_LABEL[info.settings.game], digitsLabel(info.settings.digits || 4), hintLabel(info.settings.hint), turnLabel(info.settings.turnSec), info.players + '/' + info.max + ' 人']
     .map(t => '<span class="chip">' + t + '</span>').join('');
   show('invGo', info.joinable);
   $('invNameNote').textContent = info.joinable ? '加入對戰可不填，觀戰要填' : '這局進行中，可以先觀戰';
@@ -589,7 +605,7 @@ function connect() {
 function backToLobby() {
   if (es) { es.close(); es = null; }
   SS.del('1a1b-pid-' + room);
-  S = null; room = null; pid = null; mode = null; entry = '';
+  S = null; room = null; pid = null; mode = null; resetEntry();
   closePanels(); show('toast', false);
   try { history.replaceState(null, '', location.pathname); } catch (e) {}
   $('roomIn').value = '';
@@ -631,47 +647,89 @@ $('keys').innerHTML = KEYS.map(k =>
   k === 'del' ? '<button type="button" class="del" data-k="del" aria-label="刪除">⌫</button>'
   : k === 'go' ? '<button type="button" class="go" data-k="go"></button>'
   : '<button type="button" data-k="' + k + '">' + k + '</button>').join('');
-function canPress(d) {
-  if (entry.length >= 4 || entry.includes(d)) return false;
-  return !(d === '0' && entry.length === 0); // 首位不能是 0
-}
+function canPress(d) { return !(d === '0' && sel === 0); } // 首位不能是 0；其他數字一律可按（已用過的會搬過來）
 function canSubmit() {
-  if (entry.length !== 4 || sending) return false;
+  if (slots.length !== N() || slots.some(x => !x) || sending) return false;
   return mode === 'secret' || (mode === 'guess' && canGuess);
 }
-function press(d) { if (mode && canPress(d)) { entry += d; dmsg(''); renderEntry(); } }
-function backspace() { if (mode && entry) { entry = entry.slice(0, -1); renderEntry(); } }
+function nextEmpty(from) { // 從 from 的下一格開始繞一圈找空格；全滿就停在原地
+  for (let k = 1; k <= slots.length; k++) { const i = (from + k) % slots.length; if (!slots[i]) return i; }
+  return from;
+}
+function press(d) {
+  if (!mode || !canPress(d)) return;
+  const j = slots.indexOf(d);
+  if (j >= 0 && j !== sel) slots[j] = ''; // 數字搬家：原本那格變空格
+  slots[sel] = d;
+  sel = nextEmpty(sel);
+  dmsg(''); renderEntry();
+}
+function backspace() {
+  if (!mode) return;
+  if (slots[sel]) slots[sel] = ''; // 目前這格有數字：清掉它，游標留在原地
+  else { // 目前這格是空的：往前找最近一個有數字的格子清掉
+    for (let k = 1; k < slots.length; k++) { const i = (sel - k + slots.length) % slots.length; if (slots[i]) { slots[i] = ''; sel = i; break; } }
+  }
+  renderEntry();
+}
+function clearAll() { if (mode && !entryEmpty()) { resetEntry(); renderEntry(); } }
+function fillFrom(guess) { // 點過去的猜測 → 整串帶入輸入格
+  if (!mode || !guess || guess.length !== N()) return;
+  slots = guess.split(''); sel = 0; dmsg(''); renderEntry();
+}
 async function submit() {
   if (!canSubmit()) return;
+  const val = entryStr();
   sending = true; renderEntry();
   try {
-    await act(mode === 'secret' ? 'secret' : 'guess', mode === 'secret' ? { secret: entry } : { guess: entry });
-    entry = ''; dmsg('');
+    await act(mode === 'secret' ? 'secret' : 'guess', mode === 'secret' ? { secret: val } : { guess: val });
+    if (entryStr() === val) resetEntry(); // 送出期間若又改了輸入格就保留
+    dmsg('');
   } catch (e) { dmsg(e.message, true); }
   sending = false; renderEntry();
 }
+let delTimer = 0, delLong = false;
+const delStart = () => { delLong = false; clearTimeout(delTimer); delTimer = setTimeout(() => { delLong = true; clearAll(); }, 550); };
+const delEnd = () => clearTimeout(delTimer);
+$('keys').addEventListener('pointerdown', e => { if (e.target.closest('[data-k="del"]')) delStart(); });
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => $('keys').addEventListener(ev, delEnd));
 $('keys').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
   const k = b.dataset.k;
-  if (k === 'del') backspace(); else if (k === 'go') submit(); else press(k);
+  if (k === 'del') { if (delLong) { delLong = false; return; } backspace(); } else if (k === 'go') submit(); else press(k);
+});
+$('slots').addEventListener('click', e => {
+  const b = e.target.closest('.slot'); if (!b || !mode) return;
+  sel = Number(b.dataset.i); renderEntry();
 });
 document.addEventListener('keydown', e => {
   if (!mode || panelOpen() || e.target.tagName === 'INPUT' || e.ctrlKey || e.metaKey || e.altKey) return;
   if (/^[0-9]$/.test(e.key)) { press(e.key); e.preventDefault(); }
   else if (e.key === 'Backspace') { backspace(); e.preventDefault(); }
   else if (e.key === 'Enter') { submit(); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft') { sel = (sel - 1 + slots.length) % slots.length; renderEntry(); e.preventDefault(); }
+  else if (e.key === 'ArrowRight') { sel = (sel + 1) % slots.length; renderEntry(); e.preventDefault(); }
+});
+// 點自己過去的猜測，整串帶入輸入格
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-guess]');
+  if (c) fillFrom(c.dataset.guess);
 });
 function renderEntry() {
-  $('slots').innerHTML = [0, 1, 2, 3].map(i =>
-    '<div class="slot' + (i === entry.length && mode ? ' cur' : '') + '">' + (entry[i] || '') + '</div>').join('');
+  if (slots.length !== N()) resetEntry();
+  setHTML($('slots'), slots.map((d, i) =>
+    '<button type="button" class="slot' + (i === sel && mode ? ' cur' : '') + (d ? ' on' : '') + '" data-i="' + i + '" aria-label="第 ' + (i + 1) + ' 位' + (d ? '，' + d : '，空') + '">' + d + '</button>').join(''));
   const me = S && myPlayer(S);
   $('keys').querySelectorAll('button').forEach(b => {
     const k = b.dataset.k;
-    if (k === 'del') b.disabled = !entry;
+    if (k === 'del') b.disabled = entryEmpty();
     else if (k === 'go') {
       b.disabled = !canSubmit();
       b.textContent = mode === 'secret' ? '設定' : canGuess ? '送出' : (me && me.submitted ? '已送出' : '等待');
-    } else b.disabled = !canPress(k);
+    } else {
+      b.disabled = !canPress(k);
+      b.classList.toggle('used', slots.includes(k)); // 已填過的數字淡淡標示，按下去會搬到目前這格
+    }
   });
 }
 function dmsg(t, err) { $('dmsg').textContent = t; $('dmsg').classList.toggle('err', !!err); }
@@ -753,9 +811,10 @@ function openSettings() {
   const sync = () => {
     const game = $('sGame').dataset.val;
     show('sFieldSet', game === 'duel');
-    buildTurn($('sTurn'), game, want, v => { want = v; });
+    buildTurn($('sTurn'), game, $('sDigits').dataset.val, want, v => { want = v; });
   };
   seg($('sGame'), ['duel', 'race'], o => GAME_LABEL[o], st.game, sync);
+  seg($('sDigits'), [4, 5], o => o + ' 位', String(st.digits || 4), sync);
   seg($('sHint'), ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準', st.hint);
   seg($('sPeek'), ['off', 'on'], fmtPeek, st.peek);
   seg($('sSet'), [10, 20, 30], o => o + ' 秒', st.setSec);
@@ -764,7 +823,7 @@ function openSettings() {
 }
 $('sSave').onclick = async () => {
   try {
-    await act('settings', { patch: { roomName: $('sName').value, game: $('sGame').dataset.val, hint: $('sHint').dataset.val, peek: $('sPeek').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
+    await act('settings', { patch: { roomName: $('sName').value, game: $('sGame').dataset.val, digits: $('sDigits').dataset.val, hint: $('sHint').dataset.val, peek: $('sPeek').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
     closePanels();
   } catch (e) { $('sMsg').textContent = e.message; }
 };
@@ -847,14 +906,14 @@ function resultHTML(g) {
   return g.a === 0 && g.b === 0 ? '<span class="zero">0A0B</span>' : '<span class="ra">' + g.a + 'A</span><span class="rb">' + g.b + 'B</span>';
 }
 function digitsHTML(g) {
-  if (!g.guess) return '••••'; // 數字被隱藏時（觀戰者沒開放看答案）
+  if (!g.guess) return '•'.repeat(N()); // 數字被隱藏時（觀戰者沒開放看答案）
   return g.pos ? g.guess.split('').map((d, k) => g.pos.includes(k) ? '<span class="hit">' + d + '</span>' : d).join('') : g.guess;
 }
 // 答案顯示：自己的直接顯示；觀戰者看別人的有小眼睛可切換
 function secretHTML(value, masked) {
   if (!value) return '';
   if (!masked) return '<span class="secret"><em>' + value + '</em></span>';
-  return '<span class="secret"><em>' + (reveal ? value : '••••') + '</em><button type="button" class="eye" data-eye aria-label="' + (reveal ? '隱藏答案' : '顯示答案') + '">' + (reveal ? EYE_OFF : EYE) + '</button></span>';
+  return '<span class="secret"><em>' + (reveal ? value : '•'.repeat(value.length)) + '</em><button type="button" class="eye" data-eye aria-label="' + (reveal ? '隱藏答案' : '顯示答案') + '">' + (reveal ? EYE_OFF : EYE) + '</button></span>';
 }
 document.addEventListener('click', e => {
   if (!e.target.closest('[data-eye]')) return;
@@ -867,8 +926,8 @@ function cell(g, tint, isNew) {
   if (!g) return '<div class="cell' + (tint ? ' me' : '') + '"></div>';
   let cls = 'cell' + (tint ? ' me' : '') + (isNew ? ' new' : '');
   if (g.timeout) return '<div class="' + cls + ' to"><span class="dg">超時跳過</span></div>';
-  if (g.a === 4) cls += ' win';
-  return '<div class="' + cls + '"><span class="dg">' + digitsHTML(g) + '</span><span class="rs">' + resultHTML(g) + '</span></div>';
+  if (g.a === N()) cls += ' win';
+  return '<div class="' + cls + '"' + (tint && g.guess ? ' data-guess="' + g.guess + '"' : '') + '><span class="dg">' + digitsHTML(g) + '</span><span class="rs">' + resultHTML(g) + '</span></div>';
 }
 let lastMoves = -1;
 function renderDuel(s) {
@@ -876,7 +935,7 @@ function renderDuel(s) {
   // 玩家：左欄自己、右欄對手；觀戰：依玩家順序
   const L = spec ? s.players[0] : myPlayer(s);
   const R = spec ? s.players[1] : duelOpp(s);
-  if (!L || !R) { $('bhead').innerHTML = ''; $('rows').innerHTML = ''; return; }
+  if (!L || !R) { $('bhead').innerHTML = ''; setHTML($('rows'), ''); return; }
   $('bhead').innerHTML = spec
     ? '<span></span><span class="me">' + esc(L.name) + ' 猜 ' + secretHTML(R.secret, s.phase !== 'over') + '</span><span>' + esc(R.name) + ' 猜 ' + secretHTML(L.secret, s.phase !== 'over') + '</span>'
     : '<span></span><span class="me">我猜對手</span><span>對手猜我 ' + secretHTML(L.secret, false) + '</span>';
@@ -892,7 +951,7 @@ function renderDuel(s) {
       + cell(b[r], false, newest === 'R' && r === b.length - 1) + '</div>';
   }
   const first = s.starter ? byPub(s, s.starter) : null;
-  $('rows').innerHTML = html || '<div class="empty">' + (spec ? (first ? first.name + ' 先猜' : '') : (first && first.me ? '你先猜，從下面輸入 4 個數字' : '對手先猜')) + '</div>';
+  setHTML($('rows'), html || '<div class="empty">' + (spec ? (first ? first.name + ' 先猜' : '') : (first && first.me ? '你先猜，從下面輸入 ' + N() + ' 個數字' : '對手先猜')) + '</div>');
   if (fresh || lastMoves < 0) $('sheet').scrollTop = $('sheet').scrollHeight;
   lastMoves = total;
 }
@@ -941,18 +1000,18 @@ function renderRace(s) {
     html += '</div>';
     const fresh = me && me.guesses.length !== lastMoves;
     lastMoves = me ? me.guesses.length : 0;
-    $('raceView').innerHTML = html;
+    setHTML($('raceView'), html);
     if (fresh) $('sheet').scrollTop = $('sheet').scrollHeight;
     return;
   }
-  $('raceView').innerHTML = html;
+  setHTML($('raceView'), html);
 }
 
 // ---------- 等待區 ----------
 function renderWait(s) {
   const st = s.settings;
   $('bigCode').textContent = s.code;
-  $('chips').innerHTML = [GAME_LABEL[st.game], hintLabel(st.hint), st.game === 'duel' ? '設定數字 ' + st.setSec + ' 秒' : '', turnLabel(st.turnSec), st.peek === 'on' ? '觀戰可看答案' : '']
+  $('chips').innerHTML = [GAME_LABEL[st.game], digitsLabel(st.digits || 4), hintLabel(st.hint), st.game === 'duel' ? '設定數字 ' + st.setSec + ' 秒' : '', turnLabel(st.turnSec), st.peek === 'on' ? '觀戰可看答案' : '']
     .filter(Boolean).map(t => '<span class="chip">' + t + '</span>').join('');
   let rows = s.players.map(p => '<div class="prow"><span class="dot' + (p.online ? ' on' : '') + '"></span><span class="nm">' + esc(p.name) + (p.me ? '<small>（你）</small>' : '') + '</span>'
     + (p.host ? '<span class="tag host">房主</span>' : '') + '</div>').join('');
@@ -1027,6 +1086,7 @@ function render() {
   $('roomCode').textContent = s.code;
   show('tagRace', !duel);
   show('tagEasy', s.settings.hint === 'easy');
+  show('tagFive', s.settings.digits === 5);
 
   // 觀戰名單：所有人都看得到
   show('watchers', s.specs.length > 0);
@@ -1038,7 +1098,7 @@ function render() {
   let newMode = null;
   if (me && s.phase === 'setting' && !me.secret) newMode = 'secret';
   else if (me && playing && !me.out) newMode = 'guess';
-  if (newMode !== mode) { entry = ''; dmsg(''); if (newMode === 'secret' || (newMode === 'guess' && !duel && s.round === 1 && !me.guesses.length)) clearNotes(); }
+  if (newMode !== mode) { resetEntry(); dmsg(''); if (newMode === 'secret' || (newMode === 'guess' && !duel && s.round === 1 && !me.guesses.length)) clearNotes(); }
   mode = newMode;
   canGuess = !!me && playing && !me.out && (duel ? s.turn === me.pub : !me.submitted);
   deadline = s.msLeft ? now + s.msLeft : 0;
@@ -1107,9 +1167,9 @@ function render() {
   if (over) renderOver(s);
   renderActs(s);
   show('dock', !!mode || over || !$('roomActs').classList.contains('hide'));
-  if (mode === 'guess' && duel && me.auto && !me.guesses.length && opp && !opp.guesses.length && !entry)
+  if (mode === 'guess' && duel && me.auto && !me.guesses.length && opp && !opp.guesses.length && entryEmpty())
     dmsg('時間到，已幫你選了 ' + me.secret);
-  if (mode === 'guess' && !duel && me.submitted && !entry) dmsg('這回合已送出，等其他人');
+  if (mode === 'guess' && !duel && me.submitted && entryEmpty()) dmsg('這回合已送出，等其他人');
   else if (mode === 'guess' && !duel && !me.submitted && $('dmsg').textContent === '這回合已送出，等其他人') dmsg('');
   renderEntry();
   renderChat();

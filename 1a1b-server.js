@@ -24,22 +24,24 @@ const PAGE = fs.readFileSync(path.join(__dirname, 'page.html'), 'utf8'); // 前�
 
 // ---------- 小工具 ----------
 // 4 個不重複數字，第一位不能是 0
-const valid = s => /^[1-9]\d{3}$/.test(s) && new Set(s).size === 4;
+const DIGIT_OPTIONS = [4, 5];
+const valid = (s, n) => typeof s === 'string' && s.length === n && /^[1-9]\d*$/.test(s) && new Set(s).size === n;
+const badDigits = n => n + ' 個不重複的數字，第一位不能是 0';
 function score(secret, guess) {
   let a = 0, b = 0;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < secret.length; i++) {
     if (guess[i] === secret[i]) a++;
     else if (secret.includes(guess[i])) b++;
   }
   return { a, b };
 }
-function randomSecret() {
+function randomSecret(n) {
   let s;
   do {
     const d = '0123456789'.split('');
     for (let i = d.length - 1; i > 0; i--) { const j = crypto.randomInt(i + 1); [d[i], d[j]] = [d[j], d[i]]; }
-    s = d.slice(0, 4).join('');
-  } while (!valid(s));
+    s = d.slice(0, n).join('');
+  } while (!valid(s, n));
   return s;
 }
 function lanIPs() {
@@ -63,14 +65,24 @@ const anyOnline = room => members(room).some(m => m.res);
 const playersOnline = room => room.players.some(p => p.res);
 const inGame = room => room.phase === 'setting' || room.phase === 'playing';
 const joinable = room => !inGame(room) && room.players.length < MAX[room.settings.game];
+// 各玩法／位數可選的每回合秒數（0 = 不限；多人競速不能不限，一個人發呆全場都在等）
+function turnChoices(game, digits) {
+  if (process.env.TURN_OPTIONS) return game === 'race' ? TURN_OPTIONS.filter(t => t > 0) : TURN_OPTIONS;
+  if (game === 'race') return digits === 5 ? [60, 90] : [40, 60];
+  return digits === 5 ? [0, 60, 90] : [0, 40, 60];
+}
+const nearest = (list, v) => list.reduce((b, x) => (Math.abs(x - v) < Math.abs(b - v) ? x : b), list[0]);
 function cleanSettings(src, base) {
   const s = Object.assign({}, base);
   if (src.game === 'duel' || src.game === 'race') s.game = src.game;
   if (src.hint === 'normal' || src.hint === 'easy') s.hint = src.hint;
   if (SET_OPTIONS.includes(Number(src.setSec))) s.setSec = Number(src.setSec);
-  if (TURN_OPTIONS.includes(Number(src.turnSec))) s.turnSec = Number(src.turnSec);
+  if (DIGIT_OPTIONS.includes(Number(src.digits))) s.digits = Number(src.digits);
+  if (!DIGIT_OPTIONS.includes(s.digits)) s.digits = 4;
+  const allowed = turnChoices(s.game, s.digits); // 每回合時間依玩法與位數而定：5 位數給多一點思考時間
+  if (allowed.includes(Number(src.turnSec))) s.turnSec = Number(src.turnSec);
   if (src.peek === 'on' || src.peek === 'off') s.peek = src.peek;
-  if (s.game === 'race' && !s.turnSec) s.turnSec = 60; // 多人競速不能不限時，一個人發呆全場都在等
+  if (!allowed.includes(s.turnSec)) s.turnSec = nearest(allowed, s.turnSec || 60); // 換玩法或位數後把時間貼到最近的可選值
   return s;
 }
 
@@ -114,12 +126,12 @@ function startGame(room) {
     room.total = room.settings.setSec * 1000;
     room.timer = setTimeout(() => {
       if (room.phase !== 'setting') return;
-      for (const p of room.players) if (!p.secret) { p.secret = randomSecret(); p.auto = true; }
+      for (const p of room.players) if (!p.secret) { p.secret = randomSecret(room.settings.digits); p.auto = true; }
       startDuel(room);
       broadcast(room);
     }, room.settings.setSec * 1000);
   } else {
-    room.secret = randomSecret();
+    room.secret = randomSecret(room.settings.digits);
     room.round = 0;
     room.raceCount = room.players.length;
     room.phase = 'playing';
@@ -153,8 +165,8 @@ function afterDuelMove(room, p, a) {
   const opp = opponent(room, p.id);
   if (room.lastChance) {
     // 後手的最後一次機會：猜中就平手，否則先手贏
-    finish(room, a === 4 ? [opp.id, p.id] : [room.starter], 'guess');
-  } else if (a === 4) {
+    finish(room, a === room.settings.digits ? [opp.id, p.id] : [room.starter], 'guess');
+  } else if (a === room.settings.digits) {
     if (p.id === room.starter) { room.lastChance = true; setTurn(room, opp.id); } // 給後手一次追平機會
     else finish(room, [p.id], 'guess');
   } else {
@@ -183,7 +195,7 @@ function maybeEndRound(room) {
 function endRound(room) {
   const act = active(room);
   for (const p of act) if (!room.submitted.has(p.id)) p.guesses.push({ timeout: true, round: room.round });
-  const winners = act.filter(p => { const g = p.guesses[p.guesses.length - 1]; return g && g.round === room.round && g.a === 4; });
+  const winners = act.filter(p => { const g = p.guesses[p.guesses.length - 1]; return g && g.round === room.round && g.a === room.settings.digits; });
   if (winners.length) finish(room, winners.map(p => p.id), 'guess');
   else nextRound(room);
 }
@@ -294,7 +306,7 @@ const api = {
         code, name: cleanText(roomName, 16), players: [], specs: [], host: null,
         flip: crypto.randomInt(2), lastIds: new Set(), // 1 對 1 第一局誰先手是隨機的
         phase: 'waiting', chat: [], chatSeq: 0, created: Date.now(), idleSince: Date.now(),
-        settings: cleanSettings(settings || {}, { game: 'duel', hint: 'normal', setSec: 10, turnSec: 0, peek: 'off' }),
+        settings: cleanSettings(settings || {}, { game: 'duel', hint: 'normal', digits: 4, setSec: 10, turnSec: 0, peek: 'off' }),
       };
       rooms.set(code, room);
       role = 'player';
@@ -359,7 +371,7 @@ const memberApi = {
   secret({ secret }, room, m) {
     if (m.role !== 'player') throw new Error('觀戰中不能設定數字');
     if (room.phase !== 'setting') throw new Error('現在不能設定數字');
-    if (!valid(secret)) throw new Error('4 個不重複的數字，第一位不能是 0');
+    if (!valid(secret, room.settings.digits)) throw new Error(badDigits(room.settings.digits));
     m.secret = secret;
     if (room.players.every(p => p.secret)) startDuel(room); // 兩人都設好就提早開始
     broadcast(room);
@@ -368,20 +380,20 @@ const memberApi = {
   guess({ guess }, room, m) {
     if (m.role !== 'player') throw new Error('觀戰中不能猜');
     if (room.phase !== 'playing') throw new Error('遊戲尚未開始');
-    if (!valid(guess)) throw new Error('4 個不重複的數字，第一位不能是 0');
+    if (!valid(guess, room.settings.digits)) throw new Error(badDigits(room.settings.digits));
     const easy = room.settings.hint === 'easy';
     if (room.settings.game === 'duel') {
       if (room.turn !== m.id) throw new Error('還沒輪到你');
       const opp = opponent(room, m.id);
       const g = Object.assign({ guess }, score(opp.secret, guess));
-      if (easy) g.pos = [0, 1, 2, 3].filter(k => guess[k] === opp.secret[k]);
+      if (easy) g.pos = [...guess].map((_, k) => k).filter(k => guess[k] === opp.secret[k]);
       m.guesses.push(g);
       afterDuelMove(room, m, g.a);
     } else {
       if (m.out) throw new Error('你已經投降了');
       if (room.submitted.has(m.id)) throw new Error('這回合已經送出了，等其他人');
       const g = Object.assign({ guess, round: room.round }, score(room.secret, guess));
-      if (easy) g.pos = [0, 1, 2, 3].filter(k => guess[k] === room.secret[k]);
+      if (easy) g.pos = [...guess].map((_, k) => k).filter(k => guess[k] === room.secret[k]);
       m.guesses.push(g);
       room.submitted.add(m.id);
       maybeEndRound(room);
