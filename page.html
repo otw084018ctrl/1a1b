@@ -57,7 +57,8 @@ input.need{border-color:var(--warn)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;color:var(--mute)}
 .tag{font-size:11px;border:1px solid currentColor;border-radius:5px;padding:0 6px;letter-spacing:.04em;flex:none;line-height:18px}
-.tag.easy{color:var(--a)}.tag.multi{color:var(--me)}.tag.host{color:var(--b)}.tag.beta{color:var(--b)}.tag.five{color:var(--b)}.tag.spec{color:var(--mute)}
+.tag.easy{color:var(--a)}.tag.multi{color:var(--me)}.tag.host{color:var(--b)}.tag.beta{color:var(--b);font-size:9px;line-height:14px;padding:0 4px;letter-spacing:.1em;text-transform:uppercase;align-self:center}
+.bt{font-size:9px;font-weight:600;letter-spacing:.08em;margin-left:3px;color:var(--b);vertical-align:super;text-transform:uppercase}.tag.five{color:var(--b)}.tag.spec{color:var(--mute)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
 .dot.on{background:var(--a)}
 .textbtn{border:0;background:none;padding:6px 2px;font-size:14px;color:var(--mute);position:relative}
@@ -286,8 +287,15 @@ input.need{border-color:var(--warn)}
 .pc .in{position:absolute;inset:0;transition:transform .55s cubic-bezier(.3,.7,.3,1) var(--d,0s);transform-style:preserve-3d}
 .pc.up .in{transform:rotateY(180deg)}
 .pc .b,.pc .f{position:absolute;inset:0;border-radius:9px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.pc .b{background:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 2px,transparent 2px 8px),linear-gradient(160deg,#35495f,#212f3d);border:1px solid #17212b}
-.pc .b::after{content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,.2);border-radius:5px}
+.pc .b{background:
+  repeating-linear-gradient(45deg,rgba(201,174,116,.09) 0 1px,transparent 1px 9px),
+  repeating-linear-gradient(-45deg,rgba(201,174,116,.09) 0 1px,transparent 1px 9px),
+  linear-gradient(165deg,#25384d,#152230);border:1px solid #0f1822;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.pc .b::before{content:"";position:absolute;inset:4px;border:1px solid rgba(201,174,116,.6);border-radius:6px}
+.pc .b::after{content:"";position:absolute;inset:8px;border:1px solid rgba(201,174,116,.22);border-radius:4px}
+.pc .b .em{position:absolute;left:50%;top:50%;width:44%;transform:translate(-50%,-50%);fill:none;stroke:rgba(214,189,132,.9);stroke-width:1.4;overflow:visible}
+.pc .b .em .bg{fill:#1b2b3c;stroke:none}
+.comm .pc .b::before{inset:3px}.comm .pc .b::after{inset:6px}
 .pc .f{transform:rotateY(180deg)}
 .cf{background:#f6f4ee;border:1px solid #d6d1c3;color:#1b1e22;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:9px}
 .cf.red{color:#b3261e}
@@ -329,7 +337,7 @@ input.need{border-color:var(--warn)}
 <!-- 大廳 -->
 <section id="lobby" class="screen lobby">
   <div class="mark">1<i>A</i>1<u>B</u></div>
-  <p class="rules">猜出 4 或 5 位數（開房時選），數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先全部猜對（4A 或 5A）的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。<br><b>記憶撲克（beta）</b>：先在限時內記住 16 張牌的位置，牌翻回去後憑記憶選 2 張，加上 3 張公牌組成五張牌比撲克牌型。</p>
+  <p class="rules">猜出 4 或 5 位數（開房時選），數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先全部猜對（4A 或 5A）的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。<br><b>記憶撲克<sup class="bt">beta</sup></b>：先在限時內記住 16 張牌的位置，牌翻回去後憑記憶選 2 張，加上 3 張公牌組成五張牌比撲克牌型。</p>
   <div class="group" style="border-top:0;padding-top:0">
     <label class="glabel" for="name">你的名字</label>
     <input id="name" maxlength="12" placeholder="輸入暱稱" autocomplete="off" enterkeyhint="done">
@@ -384,7 +392,7 @@ input.need{border-color:var(--warn)}
 <!-- 遊戲 -->
 <section id="game" class="screen hide">
   <header class="bar">
-    <div class="left"><span class="title" id="roomTitle"></span><span class="code" id="roomCode"></span><span class="tag multi hide" id="tagRace">多人</span><span class="tag easy hide" id="tagEasy">簡單</span><span class="tag five hide" id="tagFive">5 位</span><span class="tag beta hide" id="tagBeta">β</span></div>
+    <div class="left"><span class="title" id="roomTitle"></span><span class="code" id="roomCode"></span><span class="tag multi hide" id="tagRace">多人</span><span class="tag easy hide" id="tagEasy">簡單</span><span class="tag five hide" id="tagFive">5 位</span><span class="tag beta hide" id="tagBeta">beta</span></div>
     <div class="right">
       <button type="button" class="textbtn" id="chatBtn">聊天<span class="badge hide" id="badge"></span></button>
       <button type="button" class="textbtn" id="quitBtn">投降</button>
@@ -508,15 +516,18 @@ const store = t => ({
 const LS = store('local'), SS = store('session');
 
 const QUICK = ['快一點', '快睡著了', '你只剩一次機會', '我要猜到了', '好菜'];
+const QUICK_PK = ['剛好有記到', '笑死', '絕對比你大', '也太簡單', '失智是不是', '阿茲海默?'];
+let quickSet = null;
+function setQuick(list) { if (quickSet === list) return; quickSet = list; $('quick').innerHTML = list.map(q => '<button type="button">' + q + '</button>').join(''); }
 const EMOJI = [['🥲', '哭笑不得'], ['🥱', '打哈欠'], ['😭', '哭哭'], ['🤣', '大笑'], ['😏', '得意'], ['🤔', '思考'], ['😱', '嚇到'], ['😤', '不服'], ['👍', '讚'], ['🙏', '拜託']];
 const EMOJI_SET = new Set(EMOJI.map(e => e[0]));
 const EYE = '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 
 const GAME_LABEL = { duel: '1 對 1', race: '多人競速', poker: '記憶撲克' };
-const gameSegLabel = o => GAME_LABEL[o] + (o === 'poker' ? ' β' : '');
+const gameSegLabel = o => GAME_LABEL[o] + (o === 'poker' ? '<sup class="bt">beta</sup>' : '');
 function settingChips(st) {
-  if (st.game === 'poker') return ['記憶撲克 β', '記憶 ' + st.memSec + ' 秒', '選牌 60 秒'];
+  if (st.game === 'poker') return ['記憶撲克 beta', '記憶 ' + st.memSec + ' 秒', '選牌 60 秒'];
   return [GAME_LABEL[st.game], digitsLabel(st.digits || 4), hintLabel(st.hint), st.game === 'duel' ? '設定數字 ' + st.setSec + ' 秒' : '', turnLabel(st.turnSec)].filter(Boolean);
 }
 const hintLabel = h => h === 'easy' ? '簡單模式' : '標準模式';
@@ -630,7 +641,7 @@ async function loadRooms() {
   try { list = (await post('rooms')).rooms; } catch (e) { return; }
   $('rlist').innerHTML = list.length ? list.map(r => {
     const state = r.phase === 'setting' || r.phase === 'playing' ? '對戰中' : r.players + '/' + r.max + ' 人';
-    const meta = [r.settings.game === 'poker' ? '記憶撲克 β' : GAME_LABEL[r.settings.game], r.settings.game !== 'poker' && (r.settings.digits || 4) === 5 ? '5 位數' : '', state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
+    const meta = [r.settings.game === 'poker' ? '記憶撲克 beta' : GAME_LABEL[r.settings.game], r.settings.game !== 'poker' && (r.settings.digits || 4) === 5 ? '5 位數' : '', state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
     return '<div class="ritem"><div class="info"><div class="nm">' + esc(roomTitle(r.name, r.host)) + '<span class="cd">' + r.code + '</span></div>'
       + '<div class="meta">' + esc(meta) + '</div></div><div class="acts">'
       + '<button type="button" data-code="' + r.code + '" data-role="spec">觀戰</button>'
@@ -821,7 +832,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && panelOpen(
 
 // ---------- 聊天 ----------
 let chatSeen = -1, chatRendered = -1, toastTimer = 0;
-$('quick').innerHTML = QUICK.map(q => '<button type="button">' + q + '</button>').join('');
+setQuick(QUICK);
 $('emos').innerHTML = EMOJI.map(e => '<button type="button" aria-label="' + e[1] + '" title="' + e[1] + '">' + e[0] + '</button>').join('');
 async function say(text) {
   text = String(text || '').trim();
@@ -1163,6 +1174,7 @@ function render() {
   $('roomTitle').textContent = roomTitle(s.name, host);
   $('roomCode').textContent = s.code;
   const isPk = s.settings.game === 'poker';
+  setQuick(isPk ? QUICK_PK : QUICK);
   show('tagRace', s.settings.game === 'race');
   show('tagBeta', isPk);
   show('tagEasy', !isPk && s.settings.hint === 'easy');
@@ -1268,7 +1280,8 @@ let pkLastStage = '', pkBuilt = false, pkNoteText = '', pkNoteUntil = 0;
 function pkNote(t) { pkNoteText = t; pkNoteUntil = Date.now() + 3500; if (S) renderPokerDock(S); }
 function pkBuild() {
   if (pkBuilt) return; pkBuilt = true;
-  const card = '<div class="in"><div class="b"></div><div class="f cf"></div></div><div class="seals"></div>';
+  const emblem = '<svg class="em" viewBox="-20 -20 40 40" aria-hidden="true"><path class="bg" d="M0-19 19 0 0 19-19 0Z"/><path d="M0-19 19 0 0 19-19 0Z"/><path d="M0-12 12 0 0 12-12 0Z" stroke-opacity=".6"/><circle r="2.6" fill="rgba(214,189,132,.9)" stroke="none"/></svg>';
+  const card = '<div class="in"><div class="b">' + emblem + '</div><div class="f cf"></div></div><div class="seals"></div>';
   $('pkGrid').innerHTML = Array.from({ length: 16 }, (_, i) => '<button type="button" class="pc" data-i="' + i + '" aria-label="第 ' + (i + 1) + ' 張牌">' + card + '</button>').join('');
   $('pkComm').innerHTML = [0, 1, 2].map(() => '<div class="pc">' + card + '</div>').join('');
 }
@@ -1300,7 +1313,7 @@ function renderPoker(s) {
   const canPick = !!me && !spec && st === 'select' && !me.locked && !me.out;
 
   // 狀態列
-  $('who').innerHTML = '<span>記憶撲克</span><b>' + s.players.length + ' / ' + s.max + ' 人</b>' + (spec ? '<span class="tag spec">觀戰中</span>' : '');
+  $('who').innerHTML = '<span>記憶撲克<sup class="bt">beta</sup></span><b>' + s.players.length + ' / ' + s.max + ' 人</b>' + (spec ? '<span class="tag spec">觀戰中</span>' : '');
   let turn = '', sub = '', tcls = 'idle';
   if (waiting) { turn = s.me.host ? (spec ? '等待開始' : '準備好就開始') : '等待房主開始'; sub = spec ? '你正在觀戰' : ''; }
   else if (st === 'memorize') { turn = '記住每張牌的位置'; tcls = 'mine'; sub = '時間到牌會全部翻回去'; }
