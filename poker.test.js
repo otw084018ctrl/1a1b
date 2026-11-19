@@ -117,6 +117,12 @@ test('勝負說明文字', () => {
   assert.strictEqual(P.explain(ev(FOUR), ev(FULL)), '四條勝過葫蘆');
   assert.strictEqual(P.explain(ev('JS JH AC 8D 3S'), ev('JC JD KS QH 9S')), '同為一對，第一張單牌 A 大於 K');
 });
+test('reasonParts：牌型不同 / 牌型相同分出高下的項目', () => {
+  const r1 = P.reasonParts(ev(FOUR), ev(FULL));
+  assert.ok(!r1.same && r1.catA === '四條' && r1.catB === '葫蘆');
+  const r2 = P.reasonParts(ev('JS JH AC 8D 3S'), ev('JC JD KS QH 9S'));
+  assert.ok(r2.same && r2.label === '第一張單牌' && r2.hi === 'A' && r2.lo === 'K');
+});
 test('隨機抽 20 萬手五張牌：都能分類且不報錯，高牌與一對的比例符合機率', () => {
   const deck = P.makeDeck(); const cnt = {};
   for (let i = 0; i < 200000; i++) {

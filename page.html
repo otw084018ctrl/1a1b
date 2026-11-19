@@ -70,7 +70,7 @@ input.need{border-color:var(--warn)}
 .rules{margin:0;color:var(--mute);font-size:14px;line-height:1.7}
 .rules b{font-family:var(--mono)}
 .ta{color:var(--a)}.tb{color:var(--b)}
-#roomIn{font-family:var(--mono);text-transform:uppercase;letter-spacing:.3em}
+#roomIn,#plRoomIn{font-family:var(--mono);text-transform:uppercase;letter-spacing:.3em}
 
 .rlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
 .ritem{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
@@ -103,6 +103,8 @@ input.need{border-color:var(--warn)}
 .who b{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .clock{font:600 14px var(--mono);color:var(--mute);font-variant-numeric:tabular-nums}
 .clock.low{color:var(--warn)}
+.clock.big{font-size:26px;line-height:1;color:var(--ink)}
+.clock.big.low{color:var(--warn)}
 .turn{font-size:20px;font-weight:700;margin-top:6px}
 .turn.mine{color:var(--me)}
 .turn.idle{color:var(--mute);font-weight:500}
@@ -274,16 +276,12 @@ input.need{border-color:var(--warn)}
 .field.stack{flex-direction:column;align-items:stretch;gap:8px}
 .field.stack .seg button{flex:1;padding-left:4px;padding-right:4px}
 .pk{padding:12px 0 18px;display:flex;flex-direction:column;gap:14px}
-.pkhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-height:34px}
-.pkhead .lbl{font-size:12px;letter-spacing:.08em;color:var(--mute)}
-.pkhead .cnt{font:700 34px/1 var(--mono);font-variant-numeric:tabular-nums}
-.pkhead .cnt.low{color:var(--warn)}
 .comm{display:flex;align-items:center;gap:12px}
 .comm .lbl{font-size:12px;letter-spacing:.08em;color:var(--mute);flex:none;width:2.6em}
 .comm .cards{display:flex;gap:8px}
-.comm .pc{width:50px}
-.pkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
-.pc{position:relative;aspect-ratio:5/6;perspective:700px;border:0;background:none;padding:0;border-radius:9px;display:block;transition:transform .15s}
+.comm .pc{width:42px}
+.pkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:100%;max-width:312px;margin:0 auto}
+.pc{position:relative;aspect-ratio:5/7;perspective:700px;border:0;background:none;padding:0;border-radius:9px;display:block;transition:transform .15s}
 .pc .in{position:absolute;inset:0;transition:transform .55s cubic-bezier(.3,.7,.3,1) var(--d,0s);transform-style:preserve-3d}
 .pc.up .in{transform:rotateY(180deg)}
 .pc .b,.pc .f{position:absolute;inset:0;border-radius:9px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
@@ -295,13 +293,11 @@ input.need{border-color:var(--warn)}
 .pc .b::after{content:"";position:absolute;inset:8px;border:1px solid rgba(201,174,116,.22);border-radius:4px}
 .pc .b .em{position:absolute;left:50%;top:50%;width:44%;transform:translate(-50%,-50%);fill:none;stroke:rgba(214,189,132,.9);stroke-width:1.4;overflow:visible}
 .pc .b .em .bg{fill:#1b2b3c;stroke:none}
-.comm .pc .b::before{inset:3px}.comm .pc .b::after{inset:6px}
+.comm .pc .b::before{inset:3px}.comm .pc .b::after{inset:5px}
 .pc .f{transform:rotateY(180deg)}
-.cf{background:#f6f4ee;border:1px solid #d6d1c3;color:#1b1e22;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:9px}
-.cf.red{color:#b3261e}
-.cf b{font:700 24px/1 var(--mono)}
-.cf i{font-style:normal;font-size:28px;line-height:1}
-.comm .cf b{font-size:17px}.comm .cf i{font-size:20px}
+.cf{background:#fbf9f3;border:1px solid #d6d1c3;border-radius:9px;overflow:hidden}
+.cf svg{display:block;width:100%;height:100%}
+.comm .pc .f{border-radius:6px}
 .pc.dim .f{opacity:.45}
 .pkgrid .pc:not(.up){cursor:pointer}
 .pkgrid .pc.mine{transform:translateY(-3px)}
@@ -314,15 +310,14 @@ input.need{border-color:var(--warn)}
 .legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .legend i{width:10px;height:10px;border-radius:50%;background:var(--sc);flex:none}
 .legend b{color:var(--ink);font-weight:600}
-.hand{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px;animation:rise .45s .95s both}
+.hand{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px}
 .hand.win{border-color:var(--a);box-shadow:inset 0 0 0 1px var(--a)}
 .hand .hh{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .hand .nm{font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}
 .hand .nm i{width:10px;height:10px;border-radius:50%;background:var(--sc);flex:none}
 .hand .cat{font-weight:700;white-space:nowrap}.hand .cat small{font-weight:400;color:var(--mute);margin-left:6px}
 .hand .five{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.hand .cf{aspect-ratio:5/6;gap:0}
-.hand .cf b{font-size:18px}.hand .cf i{font-size:20px}
+.hand .cf{aspect-ratio:5/7}
 .hand .cf.pickd{box-shadow:0 0 0 2px var(--c)}
 .hand .na{font-size:13px;color:var(--mute)}
 #pkRes{display:flex;flex-direction:column;gap:10px}
@@ -330,14 +325,85 @@ input.need{border-color:var(--warn)}
 #pkDock .btn{width:100%}
 #pkMsg{min-height:20px;text-align:center;font-size:13px;color:var(--mute);margin-bottom:8px}
 #pkMsg.err{color:var(--warn)}
+/* 遊戲首頁 */
+.hub{overflow:auto;padding:max(36px,env(safe-area-inset-top)) 20px max(28px,env(safe-area-inset-bottom));gap:14px;justify-content:center}
+.hub .hl{font-size:12px;letter-spacing:.1em;color:var(--mute);margin-bottom:2px}
+.gcard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;width:100%;padding:20px 18px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.gcard:active{background:var(--sunk)}
+.gcard .gt{display:flex;align-items:center;gap:10px}
+.gcard .mark{font-size:32px}
+.gcard .gd{font-size:14px;color:var(--mute);line-height:1.65}
+.gcard .gm{font-size:12px;color:var(--faint);letter-spacing:.04em}
+.pmark{font:700 20px/1 var(--mono);letter-spacing:.16em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.suits{display:inline-flex;gap:5px;flex:none;height:15px}
+.suits svg{width:15px;height:15px;flex:none;fill:#1b1e22}
+.suits .r svg,.suits svg.r{fill:#b3261e}
+:root[data-theme="dark"] .suits svg{fill:#e6e8eb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .suits svg{fill:#e6e8eb}}
+.suits svg.r{fill:#d24a3d}
+.back{align-self:flex-start;margin:-6px 0 -10px}
+/* 3、2、1 倒數 */
+.pk{position:relative}
+.pkready{position:absolute;inset:-12px 0 0 0;z-index:6;background:var(--bg);display:flex;flex-direction:column;align-items:center;padding-top:72px;gap:14px}
+.pkready .ringw{position:relative;width:172px;height:172px;display:grid;place-items:center}
+.pkready svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);fill:none}
+.pkready .tr{stroke:var(--line);stroke-width:1.5}
+.pkready .pg{stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-dasharray:339.3;animation:ring 1s linear forwards}
+@keyframes ring{from{stroke-dashoffset:0}to{stroke-dashoffset:339.3}}
+.pkready .num{font:200 92px/1 var(--sans);font-variant-numeric:tabular-nums;animation:numin .45s cubic-bezier(.2,.8,.3,1)}
+@keyframes numin{from{opacity:0;transform:scale(1.25)}}
+.pkready .cap{font-size:13px;letter-spacing:.2em;color:var(--mute)}
+.pkready .cap2{font-size:13px;color:var(--faint)}
+/* 結果：先講誰贏、為什麼，再看牌 */
+.pk.res .comm,.pk.res .pkgrid,.pk.res .legend{display:none}
+.pk.res.showboard .comm{display:flex}.pk.res.showboard .pkgrid{display:grid}.pk.res.showboard .legend{display:flex}
+.verdict{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:10px 0 4px;animation:rise .5s both}
+.verdict .chip2{font-size:12px;letter-spacing:.14em;padding:2px 12px;border-radius:99px;border:1px solid currentColor}
+.verdict.win .chip2{color:var(--a)}.verdict.lose .chip2{color:var(--warn)}.verdict.tie .chip2{color:var(--mute)}
+.verdict .vt{font-size:30px;font-weight:700;line-height:1.25}
+.verdict .vc{font-size:16px;color:var(--ink)}
+.verdict .vc b{font-weight:700}
+.verdict .vy{font-size:14px;color:var(--mute)}
+.hands{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.hand{animation:rise .5s .15s both}
+.hand .pl{font-size:12px;color:var(--mute);letter-spacing:.06em;flex:none}
+.hand.lose{background:transparent}
+.hand.lose .cat{color:var(--mute)}
+.hnote{font-size:12px;color:var(--faint);text-align:center}
+.tog{align-self:center}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="su-S" viewBox="-10 -10 20 20"><path d="M0-9C2-5 9-2.5 9 3 9 6.5 5.5 7.5 3 6 3.2 8 4 9 5.5 10L-5.5 10C-4 9-3.2 8-3 6-5.5 7.5-9 6.5-9 3-9-2.5-2-5 0-9Z"/></symbol>
+  <symbol id="su-H" viewBox="-10 -10 20 20"><path d="M0 9.5C-3 7-9 3.5-9-2.5-9-6-6.5-8.5-3.5-8.5-1.8-8.5-.5-7.6 0-6.3.5-7.6 1.8-8.5 3.5-8.5 6.5-8.5 9-6 9-2.5 9 3.5 3 7 0 9.5Z"/></symbol>
+  <symbol id="su-D" viewBox="-10 -10 20 20"><path d="M0-10C1.5-6 4.5-2.5 7.5 0 4.5 2.5 1.5 6 0 10-1.5 6-4.5 2.5-7.5 0-4.5-2.5-1.5-6 0-10Z"/></symbol>
+  <symbol id="su-C" viewBox="-10 -10 20 20"><circle cx="0" cy="-4.6" r="4.6"/><circle cx="-5" cy="2.2" r="4.6"/><circle cx="5" cy="2.2" r="4.6"/><path d="M-1.2 2 -3 10 3 10 1.2 2Z"/></symbol>
+</defs></svg>
 <div class="app">
 
+<!-- 遊戲首頁 -->
+<section id="hub" class="screen hub">
+  <div class="hl">選一個遊戲</div>
+  <button type="button" class="gcard" data-go="lobby">
+    <div class="gt"><div class="mark">1<i>A</i>1<u>B</u></div></div>
+    <div class="gd">猜對方的數字，A 是數字和位置都對，B 是數字對但位置不對。1 對 1 或 2–8 人競速。</div>
+    <div class="gm">猜數字 · 2–8 人</div>
+  </button>
+  <button type="button" class="gcard" data-go="pkLobby">
+    <div class="gt"><div class="pmark">MEMORY POKER<sup class="bt">beta</sup></div></div>
+    <div class="suits"><svg viewBox="-10 -10 20 20"><use href="#su-S" x="-10" y="-10" width="20" height="20"/></svg><svg class="r" viewBox="-10 -10 20 20"><use href="#su-H" x="-10" y="-10" width="20" height="20"/></svg><svg class="r" viewBox="-10 -10 20 20"><use href="#su-D" x="-10" y="-10" width="20" height="20"/></svg><svg viewBox="-10 -10 20 20"><use href="#su-C" x="-10" y="-10" width="20" height="20"/></svg></div>
+    <div class="gd">限時記住 16 張牌的位置，翻回去後憑記憶選 2 張，加上公牌比撲克牌型。</div>
+    <div class="gm">記憶 · 撲克 · 2–4 人</div>
+  </button>
+  <div class="msg" id="hubMsg"></div>
+</section>
+
+
 <!-- 大廳 -->
-<section id="lobby" class="screen lobby">
+<section id="lobby" class="screen lobby hide">
+  <button type="button" class="linkbtn back" data-go="hub">← 所有遊戲</button>
   <div class="mark">1<i>A</i>1<u>B</u></div>
-  <p class="rules">猜出 4 或 5 位數（開房時選），數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先全部猜對（4A 或 5A）的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。<br><b>記憶撲克<sup class="bt">beta</sup></b>：先在限時內記住 16 張牌的位置，牌翻回去後憑記憶選 2 張，加上 3 張公牌組成五張牌比撲克牌型。</p>
+  <p class="rules">猜出 4 或 5 位數（開房時選），數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先全部猜對（4A 或 5A）的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。</p>
   <div class="group" style="border-top:0;padding-top:0">
     <label class="glabel" for="name">你的名字</label>
     <input id="name" maxlength="12" placeholder="輸入暱稱" autocomplete="off" enterkeyhint="done">
@@ -346,7 +412,6 @@ input.need{border-color:var(--warn)}
     <div class="glabel">開新房間</div>
     <input id="roomName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" enterkeyhint="done" aria-label="房間名稱">
     <div class="field stack"><span>玩法</span><div class="seg" id="segGame"></div></div>
-    <div class="field" id="fieldMem"><span>記憶時間</span><div class="seg" id="segMem"></div></div>
     <div class="field" id="fieldDigits"><span>位數</span><div class="seg" id="segDigits"></div></div>
     <div class="field" id="fieldHint"><span>提示</span><div class="seg" id="segHint"></div></div>
     <div class="field"><span>觀戰看答案</span><div class="seg" id="segPeek"></div></div>
@@ -366,6 +431,36 @@ input.need{border-color:var(--warn)}
     </div>
   </form>
   <div class="msg" id="lobbyMsg"></div>
+</section>
+
+<!-- 記憶撲克大廳 -->
+<section id="pkLobby" class="screen lobby hide">
+  <button type="button" class="linkbtn back" data-go="hub">← 所有遊戲</button>
+  <div class="pmark">MEMORY POKER<sup class="bt">beta</sup></div>
+  <p class="rules">先在限時內記住 16 張牌的位置。牌翻回去後，憑記憶選 2 張，加上 3 張公牌組成五張牌，比撲克牌型大小。2–4 人連線對戰，也可以觀戰。</p>
+  <div class="group" style="border-top:0;padding-top:0">
+    <label class="glabel" for="plName">你的名字</label>
+    <input id="plName" maxlength="12" placeholder="輸入暱稱" autocomplete="off" enterkeyhint="done">
+  </div>
+  <div class="group">
+    <div class="glabel">開新房間</div>
+    <input id="plRoomName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" enterkeyhint="done" aria-label="房間名稱">
+    <div class="field"><span>記憶時間</span><div class="seg" id="plMem"></div></div>
+    <div class="field"><span>觀戰看牌</span><div class="seg" id="plPeek"></div></div>
+    <button type="button" class="btn primary" id="plCreate">建立房間</button>
+  </div>
+  <div class="group">
+    <div class="glabel">目前的房間</div>
+    <div class="rlist" id="plRlist"><div class="rempty">讀取中…</div></div>
+  </div>
+  <form class="group" id="plJoin" autocomplete="off">
+    <label class="glabel" for="plRoomIn">用代碼加入</label>
+    <div class="row">
+      <input id="plRoomIn" maxlength="6" placeholder="代碼" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" style="flex:1">
+      <button type="submit" class="btn" style="flex:none">加入</button>
+    </div>
+  </form>
+  <div class="msg" id="plMsg"></div>
 </section>
 
 <!-- 邀請連結打開時 -->
@@ -440,11 +535,16 @@ input.need{border-color:var(--warn)}
     <div class="race hide" id="raceView"></div>
 
     <div class="pk hide" id="pkView">
-      <div class="pkhead"><span class="lbl" id="pkLbl"></span><span class="cnt" id="pkCnt"></span></div>
+      <div class="pkready hide" id="pkReady">
+        <div class="ringw"><svg viewBox="0 0 120 120"><circle class="tr" cx="60" cy="60" r="54"/><circle class="pg" id="pkRing" cx="60" cy="60" r="54"/></svg><div class="num" id="pkNum">3</div></div>
+        <div class="cap">準備記憶</div>
+        <div class="cap2">牌一翻開就開始計時</div>
+      </div>
       <div class="comm"><span class="lbl">公牌</span><div class="cards" id="pkComm"></div></div>
       <div class="pkgrid" id="pkGrid"></div>
       <div class="legend" id="pkLegend"></div>
       <div id="pkRes"></div>
+      <button type="button" class="linkbtn tog hide" id="pkTog">看牌桌</button>
     </div>
   </main>
 
@@ -489,11 +589,11 @@ input.need{border-color:var(--warn)}
       <div class="phead"><b>房間設定</b><button type="button" class="textbtn" data-close>取消</button></div>
       <div class="pbody">
         <input id="sName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" aria-label="房間名稱">
-        <div class="field stack"><span>玩法</span><div class="seg" id="sGame"></div></div>
+        <div class="field stack" id="sFieldGame"><span>玩法</span><div class="seg" id="sGame"></div></div>
         <div class="field" id="sFieldMem"><span>記憶時間</span><div class="seg" id="sMem"></div></div>
         <div class="field" id="sFieldDigits"><span>位數</span><div class="seg" id="sDigits"></div></div>
         <div class="field" id="sFieldHint"><span>提示</span><div class="seg" id="sHint"></div></div>
-        <div class="field"><span>觀戰看答案</span><div class="seg" id="sPeek"></div></div>
+        <div class="field"><span id="sPeekLbl">觀戰看答案</span><div class="seg" id="sPeek"></div></div>
         <div class="field" id="sFieldSet"><span>設定數字</span><div class="seg" id="sSet"></div></div>
         <div class="field" id="sFieldTurn"><span>每回合思考</span><div class="seg" id="sTurn"></div></div>
         <div class="msg" id="sMsg"></div>
@@ -555,7 +655,14 @@ async function post(path, body) {
   return j;
 }
 const act = (path, body) => post(path, Object.assign({ room, pid }, body || {}));
-function screen(id) { ['lobby', 'invite', 'game'].forEach(s => show(s, s === id)); if (id === 'lobby') loadRooms(); }
+let lobbyKind = '1a1b';
+function screen(id) {
+  ['hub', 'lobby', 'pkLobby', 'invite', 'game'].forEach(s => show(s, s === id));
+  if (id === 'lobby') lobbyKind = '1a1b';
+  if (id === 'pkLobby') lobbyKind = 'poker';
+  if (id === 'lobby' || id === 'pkLobby') loadRooms();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) screen(b.dataset.go); });
 
 // ---------- 分段選擇 ----------
 function seg(el, opts, fmt, val, onChange) {
@@ -580,68 +687,78 @@ function buildTurn(el, game, digits, want, onChange) {
   seg(el, opts, fmtTurn, v, onChange);
 }
 const syncLobby = () => {
-  const game = $('segGame').dataset.val, pk = game === 'poker';
+  const game = $('segGame').dataset.val;
   show('fieldSet', game === 'duel');
-  show('fieldMem', pk); show('fieldDigits', !pk); show('fieldHint', !pk); show('fieldTurn', !pk);
   buildTurn($('segTurn'), game, $('segDigits').dataset.val, LS.get('1a1b-turn2'), v => LS.set('1a1b-turn2', v));
 };
 const fmtPeek = o => o === 'on' ? '可以' : '不可';
-lobbySeg('segGame', '1a1b-game', ['duel', 'race', 'poker'], gameSegLabel, syncLobby);
-lobbySeg('segMem', '1a1b-mem', [10, 20, 30], o => o + ' 秒');
+lobbySeg('segGame', '1a1b-game', ['duel', 'race'], o => GAME_LABEL[o], syncLobby);
+lobbySeg('plMem', '1a1b-mem', [10, 20, 30], o => o + ' 秒');
+lobbySeg('plPeek', '1a1b-peek-pk', ['off', 'on'], fmtPeek);
 lobbySeg('segDigits', '1a1b-digits', [4, 5], o => o + ' 位', syncLobby);
 lobbySeg('segHint', '1a1b-mode', ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準');
 lobbySeg('segPeek', '1a1b-peek', ['off', 'on'], fmtPeek);
 lobbySeg('segSet', '1a1b-set', [10, 20, 30], o => o + ' 秒');
 syncLobby();
 $('name').value = LS.get('1a1b-name') || '';
+$('plName').value = LS.get('1a1b-name') || '';
 $('invNameIn').value = LS.get('1a1b-name') || '';
 
 // ---------- 進房 ----------
 async function enter(code, role, nameIn, msgEl) {
-  msgEl = msgEl || $('lobbyMsg');
+  const pkL = lobbyKind === 'poker';
+  const L = pkL ? { name: 'plName', roomName: 'plRoomName', msg: 'plMsg', screen: 'pkLobby' } : { name: 'name', roomName: 'roomName', msg: 'lobbyMsg', screen: 'lobby' };
+  msgEl = msgEl || $(L.msg);
   msgEl.textContent = '';
-  const name = (nameIn != null ? nameIn : $('name').value).trim();
+  const name = (nameIn != null ? nameIn : $(L.name).value).trim();
   if (role === 'spec' && !name) {
     msgEl.textContent = '觀戰要先輸入名字';
-    const inp = nameIn != null ? $('invNameIn') : $('name');
+    const inp = nameIn != null ? $('invNameIn') : $(L.name);
     inp.classList.add('need'); inp.focus();
     return;
   }
-  if (name) { LS.set('1a1b-name', name); $('name').value = name; $('invNameIn').value = name; }
+  if (name) { LS.set('1a1b-name', name); ['name', 'plName', 'invNameIn'].forEach(id => { $(id).value = name; }); }
   code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   try {
-    const j = await post('join', {
-      room: code, name, role, pid: code ? SS.get('1a1b-pid-' + code) : null,
-      roomName: $('roomName').value,
-      settings: { game: $('segGame').dataset.val, memSec: $('segMem').dataset.val, digits: $('segDigits').dataset.val, hint: $('segHint').dataset.val, peek: $('segPeek').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val },
-    });
+    const settings = pkL
+      ? { game: 'poker', memSec: $('plMem').dataset.val, peek: $('plPeek').dataset.val }
+      : { game: $('segGame').dataset.val, digits: $('segDigits').dataset.val, hint: $('segHint').dataset.val, peek: $('segPeek').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val };
+    const j = await post('join', { room: code, name, role, pid: code ? SS.get('1a1b-pid-' + code) : null, roomName: $(L.roomName).value, settings });
     room = j.room; pid = j.pid;
     SS.set('1a1b-pid-' + room, pid);
     try { history.replaceState(null, '', '?room=' + room); } catch (e) {}
     if (document.activeElement) document.activeElement.blur();
-    $('roomName').value = '';
+    $(L.roomName).value = '';
     connect();
   } catch (e) {
-    if ($('game').classList.contains('hide') && $('invite').classList.contains('hide')) screen('lobby');
-    ($('lobby').classList.contains('hide') ? msgEl : $('lobbyMsg')).textContent = e.message;
+    if ($('game').classList.contains('hide') && $('invite').classList.contains('hide')) screen(L.screen);
+    ($(L.screen).classList.contains('hide') ? msgEl : $(L.msg)).textContent = e.message;
   }
 }
-['name', 'invNameIn'].forEach(id => $(id).addEventListener('input', e => e.target.classList.remove('need')));
+['name', 'plName', 'invNameIn'].forEach(id => $(id).addEventListener('input', e => e.target.classList.remove('need')));
 $('createBtn').onclick = () => enter('', 'player');
+$('plCreate').onclick = () => enter('', 'player');
 $('joinForm').addEventListener('submit', e => {
   e.preventDefault();
   if (!$('roomIn').value.trim()) { $('lobbyMsg').textContent = '請輸入房間代碼'; return; }
   enter($('roomIn').value, 'player');
 });
+$('plJoin').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!$('plRoomIn').value.trim()) { $('plMsg').textContent = '請輸入房間代碼'; return; }
+  enter($('plRoomIn').value, 'player');
+});
 
 // 房間列表（大廳開著時每 3 秒更新）
 async function loadRooms() {
-  if ($('lobby').classList.contains('hide')) return;
+  const kind = !$('lobby').classList.contains('hide') ? '1a1b' : !$('pkLobby').classList.contains('hide') ? 'poker' : '';
+  if (!kind) return;
   let list;
-  try { list = (await post('rooms')).rooms; } catch (e) { return; }
-  $('rlist').innerHTML = list.length ? list.map(r => {
+  try { list = (await post('rooms', { kind })).rooms; } catch (e) { return; }
+  $(kind === 'poker' ? 'plRlist' : 'rlist').innerHTML = list.length ? list.map(r => {
     const state = r.phase === 'setting' || r.phase === 'playing' ? '對戰中' : r.players + '/' + r.max + ' 人';
-    const meta = [r.settings.game === 'poker' ? '記憶撲克 beta' : GAME_LABEL[r.settings.game], r.settings.game !== 'poker' && (r.settings.digits || 4) === 5 ? '5 位數' : '', state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
+    const first = kind === 'poker' ? '記憶 ' + (r.settings.memSec || 20) + ' 秒' : GAME_LABEL[r.settings.game];
+    const meta = [first, kind !== 'poker' && (r.settings.digits || 4) === 5 ? '5 位數' : '', state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
     return '<div class="ritem"><div class="info"><div class="nm">' + esc(roomTitle(r.name, r.host)) + '<span class="cd">' + r.code + '</span></div>'
       + '<div class="meta">' + esc(meta) + '</div></div><div class="acts">'
       + '<button type="button" data-code="' + r.code + '" data-role="spec">觀戰</button>'
@@ -649,10 +766,10 @@ async function loadRooms() {
       + '</div></div>';
   }).join('') : '<div class="rempty">目前沒有開著的房間，自己開一間吧</div>';
 }
-$('rlist').addEventListener('click', e => {
+['rlist', 'plRlist'].forEach(id => $(id).addEventListener('click', e => {
   const b = e.target.closest('button[data-code]'); if (!b) return;
   enter(b.dataset.code, b.dataset.role);
-});
+}));
 setInterval(loadRooms, 3000);
 
 // ---------- 邀請連結 ----------
@@ -660,10 +777,10 @@ let inviteCode = null;
 async function openInvite(code) {
   let info;
   try { info = await post('info', { room: code }); }
-  catch (e) { screen('lobby'); $('lobbyMsg').textContent = '邀請的房間 ' + code + ' 已經關閉了'; return; }
+  catch (e) { screen('hub'); $('hubMsg').textContent = '邀請的房間 ' + code + ' 已經關閉了'; return; }
   // 記得名字、而且還有位子的人直接進房
   if (info.joinable && LS.get('1a1b-name')) return enter(code, 'player', LS.get('1a1b-name'));
-  inviteCode = code;
+  inviteCode = code; lobbyKind = info.settings.game === 'poker' ? 'poker' : '1a1b';
   $('invHost').textContent = (info.host || '朋友') + ' 邀請你加入';
   $('invName').textContent = roomTitle(info.name, info.host);
   $('invCode').textContent = '房間 ' + info.code;
@@ -677,7 +794,7 @@ async function openInvite(code) {
 $('invGo').onclick = () => enter(inviteCode, 'player', $('invNameIn').value, $('invMsg'));
 $('invWatch').onclick = () => enter(inviteCode, 'spec', $('invNameIn').value, $('invMsg'));
 $('invNameIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ($('invGo').classList.contains('hide') ? $('invWatch') : $('invGo')).click(); } });
-$('invBack').onclick = () => { try { history.replaceState(null, '', location.pathname); } catch (e) {} screen('lobby'); };
+$('invBack').onclick = () => { try { history.replaceState(null, '', location.pathname); } catch (e) {} screen(lobbyKind === 'poker' ? 'pkLobby' : 'lobby'); };
 
 function connect() {
   if (es) es.close();
@@ -688,13 +805,14 @@ function connect() {
   screen('game');
 }
 function backToLobby() {
+  const wasPk = !!(S && S.settings && S.settings.game === 'poker');
   if (es) { es.close(); es = null; }
   SS.del('1a1b-pid-' + room);
   S = null; room = null; pid = null; mode = null; resetEntry();
   closePanels(); show('toast', false);
   try { history.replaceState(null, '', location.pathname); } catch (e) {}
-  $('roomIn').value = '';
-  screen('lobby');
+  $('roomIn').value = ''; $('plRoomIn').value = '';
+  screen(wasPk ? 'pkLobby' : 'lobby');
 }
 
 // ---------- 分享 ----------
@@ -889,18 +1007,19 @@ function renderChat(force) {
 function openSettings() {
   if (!S) return;
   closePanels();
-  const st = S.settings;
+  const st = S.settings, pkRoom = st.game === 'poker';
   $('sName').value = S.name || '';
   $('sMsg').textContent = '';
   let want = st.turnSec;
   const sync = () => {
     const game = $('sGame').dataset.val;
-    show('sFieldSet', game === 'duel');
-    const pk = game === 'poker';
-    show('sFieldMem', pk); show('sFieldDigits', !pk); show('sFieldHint', !pk); show('sFieldTurn', !pk);
+    show('sFieldSet', game === 'duel' && !pkRoom);
+    show('sFieldMem', pkRoom); show('sFieldDigits', !pkRoom); show('sFieldHint', !pkRoom); show('sFieldTurn', !pkRoom);
+    show('sFieldGame', !pkRoom);
+    $('sPeekLbl').textContent = pkRoom ? '觀戰看牌' : '觀戰看答案';
     buildTurn($('sTurn'), game, $('sDigits').dataset.val, want, v => { want = v; });
   };
-  seg($('sGame'), ['duel', 'race', 'poker'], gameSegLabel, st.game, sync);
+  seg($('sGame'), ['duel', 'race'], o => GAME_LABEL[o], pkRoom ? 'duel' : st.game, sync);
   seg($('sMem'), [10, 20, 30], o => o + ' 秒', String(st.memSec || 20));
   seg($('sDigits'), [4, 5], o => o + ' 位', String(st.digits || 4), sync);
   seg($('sHint'), ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準', st.hint);
@@ -911,7 +1030,7 @@ function openSettings() {
 }
 $('sSave').onclick = async () => {
   try {
-    await act('settings', { patch: { roomName: $('sName').value, game: $('sGame').dataset.val, memSec: $('sMem').dataset.val, digits: $('sDigits').dataset.val, hint: $('sHint').dataset.val, peek: $('sPeek').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
+    await act('settings', { patch: { roomName: $('sName').value, game: S.settings.game === 'poker' ? 'poker' : $('sGame').dataset.val, memSec: $('sMem').dataset.val, digits: $('sDigits').dataset.val, hint: $('sHint').dataset.val, peek: $('sPeek').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
     closePanels();
   } catch (e) { $('sMsg').textContent = e.message; }
 };
@@ -962,16 +1081,16 @@ function tick() {
   if (!S) return;
   const now = Date.now();
   const sec = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : 0;
-  if (S.pk) { const st = S.pk.stage; $('pkCnt').textContent = (st === 'memorize' || st === 'select') && deadline ? sec : ''; $('pkCnt').classList.toggle('low', sec <= 5); }
+  if (S.pk) pkTick(sec);
   if (S.phase === 'setting') {
     $('count').textContent = sec;
     $('count').classList.toggle('low', sec <= 3);
     $('clock').textContent = '';
     bar((deadline - now) / total, sec <= 3);
   } else if (S.phase === 'playing' && deadline && !(S.pk && S.pk.stage === 'reveal')) {
-    $('clock').textContent = S.pk ? '' : sec + 's';
+    $('clock').textContent = S.pk ? (S.pk.stage === 'memorize' || S.pk.stage === 'select' ? sec : '') : sec + 's';
     $('clock').classList.toggle('low', sec <= 5);
-    bar((deadline - now) / total, sec <= 5);
+    bar((deadline - now) / total, sec <= 5 && !(S.pk && S.pk.stage === 'ready'));
   } else {
     $('clock').textContent = S.phase === 'playing' && S.paused ? '暫停' : '';
     show('timebar', false);
@@ -1114,7 +1233,7 @@ function renderActs(s) {
   const spec = isSpec(s);
   const btns = [];
   const n = s.players.length;
-  const enough = s.settings.game === 'duel' ? n === 2 : n >= 2;
+  const enough = s.settings.game === 'duel' ? n === 2 : s.settings.game === 'poker' ? n >= 1 : n >= 2;
   if (s.phase === 'waiting' || s.phase === 'over') {
     if (spec) {
       if (s.canSit) btns.push('<button type="button" class="btn primary" data-act="sit">加入對戰</button>');
@@ -1196,7 +1315,7 @@ function render() {
   deadline = s.msLeft ? now + s.msLeft : 0;
   total = s.msTotal || 1;
   if (isPk) { renderPoker(s); return; }
-  show('pkView', false); show('pkDock', false);
+  show('pkView', false); show('pkDock', false); $('clock').classList.remove('big'); pkPrevStage = '';
 
   // 狀態列左側
   const opp = duelOpp(s);
@@ -1272,11 +1391,56 @@ function render() {
 
 // ---------- 記憶撲克 ----------
 const PK_COLORS = ['#b2392f', '#2f6aa3', '#2f8a62', '#b8872a'];
-const SUIT_CH = { S: '♠', H: '♥', D: '♦', C: '♣' };
 const RANK_CH = r => ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' }[r] || String(r));
-const faceHTML = c => '<b>' + RANK_CH(c.r) + '</b><i>' + SUIT_CH[c.s] + '</i>';
-const cardCls = c => 'cf' + (c.s === 'H' || c.s === 'D' ? ' red' : '');
-let pkLastStage = '', pkBuilt = false, pkNoteText = '', pkNoteUntil = 0;
+const INK = { S: '#1b1e22', C: '#1b1e22', H: '#b3261e', D: '#b3261e' };
+const ROBE = { S: '#27394f', C: '#2d5b46', H: '#a8281f', D: '#b9761f' }; // 人頭牌的衣服顏色：四種花色各不相同，比較好記
+const TINT = { S: '#e6eaf0', C: '#e3ede7', H: '#f6e2de', D: '#f6ead6' };
+const PIPS = {
+  2: [[50, 34], [50, 106]], 3: [[50, 34], [50, 70], [50, 106]],
+  4: [[34, 34], [66, 34], [34, 106], [66, 106]], 5: [[34, 34], [66, 34], [50, 70], [34, 106], [66, 106]],
+  6: [[34, 34], [66, 34], [34, 70], [66, 70], [34, 106], [66, 106]],
+  7: [[34, 34], [66, 34], [50, 52], [34, 70], [66, 70], [34, 106], [66, 106]],
+  8: [[34, 34], [66, 34], [50, 52], [34, 70], [66, 70], [50, 88], [34, 106], [66, 106]],
+  9: [[34, 31], [66, 31], [34, 57], [66, 57], [50, 70], [34, 83], [66, 83], [34, 109], [66, 109]],
+  10: [[34, 31], [66, 31], [50, 44], [34, 57], [66, 57], [34, 83], [66, 83], [50, 96], [34, 109], [66, 109]],
+};
+const pip = (s, x, y, size, flip) => '<use href="#su-' + s + '" x="' + (x - size / 2) + '" y="' + (y - size / 2) + '" width="' + size + '" height="' + size + '"' + (flip ? ' transform="rotate(180 ' + x + ' ' + y + ')"' : '') + '/>';
+// 人頭牌的半身像（上半部），下半部旋轉 180 度，和真正的撲克牌一樣
+function figure(r, s) {
+  const robe = ROBE[s], gold = '#c9a45a', skin = '#f1dcc0', line = '#7d5f3f';
+  let g = '<path d="M27 70V61Q29 54 38 52H62Q71 54 73 61V70Z" fill="' + robe + '"/>'
+    + '<path d="M38 52 50 63 62 52" fill="none" stroke="' + gold + '" stroke-width="1.8"/>'
+    + '<path d="M28 66H72" stroke="' + gold + '" stroke-width="1.2"/>'
+    + '<rect x="46.5" y="48" width="7" height="6" fill="' + skin + '"/>';
+  if (r === 12) g += '<path d="M41 38Q34 48 37 60L43 57Q41 48 44 40Z M59 38Q66 48 63 60L57 57Q59 48 56 40Z" fill="#7a4a2a"/>';
+  g += '<circle cx="50" cy="43" r="8.2" fill="' + skin + '" stroke="' + line + '" stroke-width=".6"/>'
+    + '<circle cx="46.4" cy="42.5" r=".9" fill="#3a2a1c"/><circle cx="53.6" cy="42.5" r=".9" fill="#3a2a1c"/>'
+    + '<path d="M47.5 47Q50 48.6 52.5 47" fill="none" stroke="#8a5a45" stroke-width=".7"/>';
+  if (r === 13) g += '<path d="M42.4 45Q42 55 50 56.5Q58 55 57.6 45Q55 50 50 50Q45 50 42.4 45Z" fill="#8c6a3e"/>'
+    + '<path d="M40.5 36 41.6 27 46 31.5 50 25 54 31.5 58.4 27 59.5 36Z" fill="' + gold + '" stroke="#8b6c26" stroke-width=".6"/><circle cx="50" cy="31.5" r="1.4" fill="' + robe + '"/>';
+  else if (r === 12) g += '<path d="M42 36 43.5 30 47 33.5 50 28 53 33.5 56.5 30 58 36Z" fill="' + gold + '" stroke="#8b6c26" stroke-width=".6"/><circle cx="50" cy="32" r="1.5" fill="' + robe + '"/>'
+    + '<path d="M43 55Q50 61 57 55" fill="none" stroke="' + gold + '" stroke-width="1.2" stroke-dasharray="1.2 1.6"/>';
+  else g += '<path d="M41 39Q50 29 59 39L58 41Q50 34 42 41Z" fill="' + robe + '"/><ellipse cx="50" cy="35.5" rx="10.5" ry="4.4" fill="' + robe + '"/>'
+    + '<path d="M57 33Q68 23 71 33Q64 31 60 38Z" fill="' + gold + '"/><path d="M41.5 41Q40 47 42 50" fill="none" stroke="#7a4a2a" stroke-width="1.6"/>';
+  return g;
+}
+const svgCache = {};
+function cardSVG(c) {
+  if (svgCache[c.id]) return svgCache[c.id];
+  const s = c.s, r = c.r, col = INK[s], name = RANK_CH(r);
+  const corner = '<g fill="' + col + '"><text x="12" y="23" text-anchor="middle" font-family="Georgia,\'Times New Roman\',serif" font-weight="700" font-size="' + (name.length > 1 ? 17 : 20) + '"' + (name.length > 1 ? ' letter-spacing="-1.5"' : '') + '>' + name + '</text>' + pip(s, 12, 35, 10) + '</g>';
+  let body;
+  if (r >= 11 && r <= 13) {
+    const half = '<g>' + figure(r, s) + '<g fill="' + col + '">' + pip(s, 33, 43, 8) + '</g></g>';
+    body = '<rect x="23.5" y="24.5" width="53" height="91" rx="2.5" fill="' + TINT[s] + '" stroke="' + ROBE[s] + '" stroke-width="1"/>'
+      + half + '<g transform="rotate(180 50 70)">' + half + '</g>'
+      + '<path d="M23.5 70H76.5" stroke="' + ROBE[s] + '" stroke-width=".6" opacity=".5"/>';
+  } else if (r === 14) body = '<g fill="' + col + '">' + pip(s, 50, 70, 40) + '</g>';
+  else body = '<g fill="' + col + '">' + PIPS[r].map(([x, y]) => pip(s, x, y, 17, y > 70)).join('') + '</g>';
+  return svgCache[c.id] = '<svg viewBox="0 0 100 140" aria-label="' + name + SUIT_NAME[s] + '">' + corner + '<g transform="rotate(180 50 70)">' + corner + '</g>' + body + '</svg>';
+}
+const SUIT_NAME = { S: '黑桃', H: '紅心', D: '方塊', C: '梅花' };
+let pkBuilt = false, pkNoteText = '', pkNoteUntil = 0, pkPrevStage = '', pkCollapsed = false, pkShowBoard = false, pkReadyN = 0, pkCollapseTimer = 0;
 function pkNote(t) { pkNoteText = t; pkNoteUntil = Date.now() + 3500; if (S) renderPokerDock(S); }
 function pkBuild() {
   if (pkBuilt) return; pkBuilt = true;
@@ -1285,14 +1449,14 @@ function pkBuild() {
   $('pkGrid').innerHTML = Array.from({ length: 16 }, (_, i) => '<button type="button" class="pc" data-i="' + i + '" aria-label="第 ' + (i + 1) + ' 張牌">' + card + '</button>').join('');
   $('pkComm').innerHTML = [0, 1, 2].map(() => '<div class="pc">' + card + '</div>').join('');
 }
-function pkFace(el, c) { // 牌面資料只在該公開時才放進畫面；翻回背面後清掉，避免從網頁原始碼偷看
+function pkFace(el, c) { // 牌面只在該公開時才放進畫面；翻回背面後清掉，避免從網頁原始碼偷看
   const f = el.querySelector('.f');
   if (c) {
     clearTimeout(el._clr);
-    if (el.dataset.id !== c.id) { f.innerHTML = faceHTML(c); f.className = 'f ' + cardCls(c); el.dataset.id = c.id; }
+    if (el.dataset.id !== c.id) { f.innerHTML = cardSVG(c); el.dataset.id = c.id; }
   } else if (el.dataset.id) {
     clearTimeout(el._clr);
-    el._clr = setTimeout(() => { if (!el.classList.contains('up')) { f.innerHTML = ''; f.className = 'f cf'; delete el.dataset.id; } }, 800);
+    el._clr = setTimeout(() => { if (!el.classList.contains('up')) { f.innerHTML = ''; delete el.dataset.id; } }, 800);
   }
 }
 function pkSeals(el, list) {
@@ -1306,16 +1470,79 @@ function pkSeals(el, list) {
   }
 }
 const SEAL_POS = { 1: [[0, 0]], 2: [[-9, -7], [9, 7]], 3: [[-10, -8], [10, -2], [-2, 12]], 4: [[-10, -10], [10, -10], [-10, 10], [10, 10]] };
+// 3、2、1 倒數與記憶／選牌的秒數
+function pkTick(sec) {
+  const st = S.pk.stage;
+  if (st === 'ready' && sec && sec !== pkReadyN) {
+    pkReadyN = sec;
+    $('pkNum').textContent = sec;
+    for (const el of [$('pkNum'), $('pkRing')]) { el.style.animation = 'none'; void el.getBoundingClientRect(); el.style.animation = ''; }
+  }
+  $('clock').classList.toggle('low', (st === 'memorize' || st === 'select') && sec <= 5);
+}
+function pkVerdict(s) {
+  const pk = s.pk, r = s.result, me = myPlayer(s), spec = isSpec(s), vs = pk.vs;
+  const nm = pub => { const p = byPub(s, pub); return p ? esc(p.name) + (p.me ? '（你）' : '') : ''; };
+  const iWon = !!me && r.winners.includes(me.pub);
+  let chip = '', cls = 'tie', title = '', big = '', why = '';
+  if (pk.solo && pk.hands && pk.hands.length) {
+    const h = pk.hands[0];
+    title = h.zh; chip = '單人練習';
+    big = '你選的 2 張加公牌是 <b>' + h.zh + '</b>';
+    why = h.en;
+  } else if (pk.tie) {
+    title = '平手'; chip = '不分勝負';
+    big = '雙方都是 <b>' + esc((pk.hands[0] || {}).zh || '') + '</b>，點數也完全相同';
+    why = '稍後自動重打一局';
+  } else if (r.winners.length) {
+    const w = byPub(s, r.winners[0]);
+    title = esc(w.name) + ' 獲勝';
+    if (!spec && me) { cls = iWon ? 'win' : 'lose'; chip = iWon ? '你贏了' : '你輸了'; } else cls = 'win';
+    if (vs && vs.solo) big = '其他人逾時或退出了';
+    else if (vs && !vs.same) big = nm(vs.win) + ' 的 <b>' + vs.catA + '</b> 勝過 ' + nm(vs.lose) + ' 的 <b>' + vs.catB + '</b>';
+    else if (vs) { big = '兩邊都是 <b>' + vs.catA + '</b>'; why = vs.label ? vs.label + '：<b>' + vs.hi + '</b> 大於 ' + vs.lo : ''; }
+    else big = '其他人都退出了';
+  } else { title = '沒有人完成選牌'; chip = '本局作廢'; }
+  return '<div class="verdict ' + cls + '">' + (chip ? '<span class="chip2">' + chip + '</span>' : '') + '<div class="vt">' + title + '</div><div class="vc">' + big + '</div>' + (why ? '<div class="vy">' + why + '</div>' : '') + '</div>';
+}
+function pkHands(s) {
+  const pk = s.pk, win = new Set(s.result.winners), comm = new Set(pk.community.map(c => c.id));
+  const rows = s.players.map((p, pi) => ({ p, pi, h: pk.hands.find(x => x.pub === p.pub) }));
+  rows.sort((a, b) => (a.h ? a.h.place : 99) - (b.h ? b.h.place : 99));
+  const solo = pk.solo;
+  const html = rows.map(({ p, pi, h }) => {
+    const head = '<div class="hh"><span class="nm" style="--sc:' + PK_COLORS[pi % 4] + '"><i></i>' + esc(p.name) + (p.me ? '（你）' : '') + '</span>';
+    if (!h) return '<div class="hand lose">' + head + '</div><span class="na">' + (p.timedOut ? '選牌逾時，沒有牌型' : '已退出，沒有牌型') + '</span></div>';
+    const w = win.has(p.pub);
+    return '<div class="hand ' + (w ? 'win' : 'lose') + '">' + head + '<span class="pl">' + (pk.tie || solo ? '' : '第 ' + h.place + ' 名') + '</span></div>'
+      + '<div class="hh"><span class="cat">' + h.zh + '<small>' + h.en + '</small></span></div>'
+      + '<div class="five">' + h.cards.map(c => '<div class="cf' + (comm.has(c.id) ? '' : ' pickd') + '" style="--c:' + PK_COLORS[pi % 4] + '">' + cardSVG(c) + '</div>').join('') + '</div></div>';
+  }).join('');
+  return '<div class="hands">' + html + '</div><div class="hnote">有色框的是各自選的 2 張，其餘 3 張是公牌</div>';
+}
 function renderPoker(s) {
   pkBuild();
   const pk = s.pk, spec = isSpec(s), me = myPlayer(s), st = pk ? pk.stage : 'waiting';
   const waiting = s.phase === 'waiting', over = s.phase === 'over';
   const canPick = !!me && !spec && st === 'select' && !me.locked && !me.out;
 
+  // 結果階段：先看牌翻開，過一會兒收起牌桌，只留下「誰贏、為什麼」
+  if (st === 'result') {
+    if (pkPrevStage !== 'result') {
+      pkShowBoard = false;
+      if (pkPrevStage === 'reveal') { pkCollapsed = false; clearTimeout(pkCollapseTimer); pkCollapseTimer = setTimeout(() => { pkCollapsed = true; if (S && S.pk && S.pk.stage === 'result') { render(); $('sheet').scrollTop = 0; } }, 2800); }
+      else pkCollapsed = true; // 重新整理或中途加入：直接看結果
+    }
+  } else { pkCollapsed = false; pkShowBoard = false; }
+  pkPrevStage = st;
+  const showRes = st === 'result' && pkCollapsed;
+
   // 狀態列
+  $('clock').classList.add('big');
   $('who').innerHTML = '<span>記憶撲克<sup class="bt">beta</sup></span><b>' + s.players.length + ' / ' + s.max + ' 人</b>' + (spec ? '<span class="tag spec">觀戰中</span>' : '');
   let turn = '', sub = '', tcls = 'idle';
   if (waiting) { turn = s.me.host ? (spec ? '等待開始' : '準備好就開始') : '等待房主開始'; sub = spec ? '你正在觀戰' : ''; }
+  else if (st === 'ready') { turn = '準備開始'; sub = '倒數結束牌就會翻開'; }
   else if (st === 'memorize') { turn = '記住每張牌的位置'; tcls = 'mine'; sub = '時間到牌會全部翻回去'; }
   else if (st === 'select') {
     if (spec) turn = '大家選牌中';
@@ -1324,16 +1551,18 @@ function renderPoker(s) {
     else { turn = '選 2 張你要的牌'; tcls = 'mine'; }
     if (!sub) sub = '你的 2 張 + 3 張公牌 = 五張牌比大小';
   } else if (st === 'reveal') { turn = '揭曉蠟印'; sub = '看看大家選了哪幾張'; tcls = 'mine'; }
-  else turn = '本局結束';
+  else if (st === 'result') turn = showRes ? '本局結束' : '翻牌';
   $('turn').textContent = turn; $('turn').className = 'turn ' + tcls;
   $('sub').textContent = sub;
 
   show('waitView', waiting); show('setView', false); show('board', false); show('raceView', false); show('notes', false); show('entry', false);
   show('pkView', !waiting);
+  $('pkView').classList.toggle('res', showRes);
+  $('pkView').classList.toggle('showboard', showRes && pkShowBoard);
   if (waiting) { renderWait(s); lastMoves = -1; }
 
   if (pk && !waiting) {
-    $('pkLbl').textContent = st === 'memorize' ? '記憶時間' : st === 'select' ? '選牌時間' : '';
+    show('pkReady', st === 'ready');
     // 公牌
     [...$('pkComm').children].forEach((el, i) => { const c = pk.community && pk.community[i]; el.classList.toggle('up', !!c); pkFace(el, c || null); });
     // 蠟印：每位玩家一種顏色
@@ -1361,32 +1590,23 @@ function renderPoker(s) {
       return '<span style="--sc:' + PK_COLORS[pi % 4] + '"><i></i><b>' + esc(p.name) + (p.me ? '（你）' : '') + '</b>' + (note ? ' ' + note : '') + '</span>';
     }).join('');
     // 結果
-    if (st === 'result' && pk.hands) {
-      const win = new Set(s.result.winners);
-      const comm = new Set(pk.community.map(c => c.id));
-      let html = s.players.map((p, pi) => {
-        const h = pk.hands.find(x => x.pub === p.pub);
-        const head = '<div class="hh"><span class="nm" style="--sc:' + PK_COLORS[pi % 4] + '"><i></i>' + esc(p.name) + (p.me ? '（你）' : '') + (win.has(p.pub) ? ' 🏆' : '') + '</span>';
-        if (!h) return '<div class="hand">' + head + '<span class="na">' + (p.timedOut ? '逾時沒選完' : '已退出') + '</span></div></div>';
-        return '<div class="hand' + (win.has(p.pub) ? ' win' : '') + '">' + head + '<span class="cat">' + h.zh + '<small>' + h.en + '</small></span></div>'
-          + '<div class="five">' + h.cards.map(c => '<div class="' + cardCls(c) + (comm.has(c.id) ? '' : ' pickd') + '" style="--c:' + PK_COLORS[pi % 4] + '">' + faceHTML(c) + '</div>').join('') + '</div></div>';
-      }).join('');
-      setHTML($('pkRes'), html);
-    } else setHTML($('pkRes'), '');
-  }
+    setHTML($('pkRes'), showRes && pk.hands ? pkVerdict(s) + pkHands(s) : '');
+    show('pkTog', showRes);
+    $('pkTog').textContent = pkShowBoard ? '收起牌桌' : '看牌桌';
+  } else show('pkTog', false);
 
   // 頂部投降 / 離開
   const q = $('quitBtn');
   if (!q.classList.contains('arm')) q.textContent = me && !me.out && (s.phase === 'playing') ? '投降' : '離開';
   show('quitBtn', !(over && !spec));
 
-  show('overPanel', over);
-  if (over) renderPokerOver(s); else pkLastStage = pk ? pk.stage : '';
+  show('overPanel', false); // 結果已經在畫面中央清楚寫出來，下面只留按鈕
   renderActs(s);
   renderPokerDock(s);
   renderChat();
   tick();
 }
+$('pkTog').onclick = () => { pkShowBoard = !pkShowBoard; if (S) render(); };
 function renderPokerDock(s) {
   const me = myPlayer(s), pk = s.pk;
   const show_ = !!(me && pk && pk.stage === 'select' && !me.out);
@@ -1401,23 +1621,6 @@ function renderPokerDock(s) {
     $('pkMsg').textContent = note || (me.locked ? '選擇已送出' : n === 2 ? '確認後就不能更改' : '點牌背放上蠟印，再點一次可以取消');
   }
   show('dock', show_ || s.phase === 'over' || !$('roomActs').classList.contains('hide'));
-}
-function renderPokerOver(s) {
-  const r = s.result, spec = isSpec(s), me = myPlayer(s), pk = s.pk;
-  const iWon = me && r.winners.includes(me.pub);
-  let title, cls = '', why = '';
-  if (pk && pk.tie) { title = '平手'; why = '最強的牌型完全相同，稍後自動重打一局'; }
-  else if (!r.winners.length) { title = '沒有人完成選牌'; }
-  else if (spec) title = r.names.join('、') + ' 獲勝';
-  else if (iWon) { title = '你贏了'; cls = 'win'; }
-  else { title = '你輸了'; cls = 'lose'; }
-  if (r.reason === 'othersOut') why = '其他人都退出或逾時了';
-  else if (r.reason === 'poker' && pk) why = pk.why;
-  $('overTitle').textContent = title; $('overTitle').className = 'otitle ' + cls;
-  $('overWhy').textContent = why;
-  show('reveal', false); // 勝場已經顯示在上面的名單裡
-  if (pk && pk.stage === 'result' && pkLastStage !== 'result') setTimeout(() => { if (S && S.pk && S.pk.stage === 'result') $('sheet').scrollTo({ top: $('sheet').scrollHeight, behavior: 'smooth' }); }, 1900);
-  pkLastStage = pk ? pk.stage : '';
 }
 $('pkGrid').addEventListener('click', e => {
   const b = e.target.closest('.pc'); if (!b || b.disabled || !S) return;
@@ -1444,7 +1647,7 @@ $('pkLock').onclick = async () => {
 // ---------- 啟動 ----------
 (function boot() {
   const code = (qs.get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (!code) return screen('lobby');
+  if (!code) return screen(qs.get('g') === 'poker' ? 'pkLobby' : 'hub');
   if (SS.get('1a1b-pid-' + code)) return enter(code, 'player', LS.get('1a1b-name') || ''); // 重新整理：回到原本的房間
   openInvite(code);
 })();

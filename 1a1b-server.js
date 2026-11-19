@@ -13,6 +13,7 @@ const SET_OPTIONS = envList('SET_OPTIONS', [10, 20, 30]);  // 1 對 1 設定數�
 const TURN_OPTIONS = envList('TURN_OPTIONS', [0, 40, 60]); // 每回合時間（秒），0 = 不限
 const MEM_OPTIONS = envList('MEM_OPTIONS', [10, 20, 30]);  // 記憶撲克：記憶時間（秒）
 const POKER_SEL_SEC = Number(process.env.POKER_SEL_SEC) || 60;       // 記憶撲克：選牌時間（秒）
+const POKER_READY_SEC = process.env.POKER_READY_SEC !== undefined ? Number(process.env.POKER_READY_SEC) : 3; // 開局前的 3、2、1 倒數
 const POKER_REVEAL_MS = Number(process.env.POKER_REVEAL_MS) || 3500; // 蠟印全部亮出來之後，等多久才翻牌
 const POKER_TIE_MS = Number(process.env.POKER_TIE_MS) || 6000;       // 平手後多久自動重打一局
 const MAX = { duel: 2, race: 8, poker: 4 };  // 各玩法人數上限
@@ -159,17 +160,18 @@ function finish(room, winners, reason, by) {
 }
 
 // ---------- 記憶撲克 ----------
-// 階段（room.pk.stage）：memorize 記憶 → select 選牌 → reveal 亮出蠟印 → result 翻牌比大小
+// 階段（room.pk.stage）：ready 倒數 → memorize 記憶 → select 選牌 → reveal 亮出蠟印 → result 翻牌比大小
 function startPoker(room) {
   const d = Poker.dealRound();
-  room.pk = { board: d.board, community: d.community, stage: 'memorize', hands: null, why: '', tie: false };
+  room.pk = { board: d.board, community: d.community, stage: POKER_READY_SEC ? 'ready' : 'memorize', hands: null, why: '', vs: null, tie: false };
   room.raceCount = room.players.length;
   room.phase = 'playing';
   armPoker(room);
 }
 function armPoker(room) {
   const pk = room.pk, st = pk.stage;
-  if (st === 'memorize') arm(room, room.settings.memSec, () => { if (room.phase === 'playing' && pk.stage === 'memorize') { pk.stage = 'select'; armPoker(room); } });
+  if (st === 'ready') arm(room, POKER_READY_SEC, () => { if (room.phase === 'playing' && pk.stage === 'ready') { pk.stage = 'memorize'; armPoker(room); } });
+  else if (st === 'memorize') arm(room, room.settings.memSec, () => { if (room.phase === 'playing' && pk.stage === 'memorize') { pk.stage = 'select'; armPoker(room); } });
   else if (st === 'select') arm(room, POKER_SEL_SEC, () => { if (room.phase === 'playing' && pk.stage === 'select') pokerSelectTimeout(room); });
   else if (st === 'reveal') arm(room, POKER_REVEAL_MS / 1000, () => { if (room.phase === 'playing' && pk.stage === 'reveal') showdown(room); });
 }
@@ -191,23 +193,29 @@ function pokerProceed(room) {
   if (room.phase !== 'playing' || !room.pk) return;
   const act = active(room);
   if (act.length === 0) return pokerEnd(room, [], 'allOut');
-  if (act.length === 1 && !act[0].locked) return pokerEnd(room, [act[0].id], 'othersOut');
+  if (act.length === 1 && room.raceCount >= 2 && !act[0].locked) return pokerEnd(room, [act[0].id], 'othersOut');
   if (room.pk.stage === 'select' && act.every(p => p.locked)) startReveal(room);
 }
 function pokerEnd(room, winners, reason) {
   room.pk.stage = 'result';
   for (const p of room.players) if (room.lastIds.has(p.id)) p.played = (p.played || 0) + 1;
-  for (const id of winners) { const w = room.players.find(p => p.id === id); if (w) w.wins = (w.wins || 0) + 1; }
-  finish(room, winners, reason);
+  const solo = room.raceCount < 2; // 一個人練習：不算勝負
+  if (!solo) for (const id of winners) { const w = room.players.find(p => p.id === id); if (w) w.wins = (w.wins || 0) + 1; }
+  finish(room, solo ? [] : winners, solo && reason === 'poker' ? 'solo' : reason);
 }
 function showdown(room) {
   const pk = room.pk;
   const act = active(room).filter(p => p.locked);
   const hands = act.map(p => Poker.evaluateHand([pk.board[p.pick[0]], pk.board[p.pick[1]]].concat(pk.community)));
-  pk.hands = act.map((p, i) => ({ id: p.id, h: hands[i] }));
   const best = Poker.bestOf(hands);
   const order = hands.map((_, i) => i).sort((i, j) => { const r = Poker.compareHands(hands[i], hands[j]); return r === 'A' ? -1 : r === 'B' ? 1 : 0; });
+  // 名次：牌力完全相同的並列同一名
+  const place = new Array(hands.length);
+  order.forEach((idx, k) => { place[idx] = k > 0 && Poker.compareHands(hands[order[k - 1]], hands[idx]) === 'TIE' ? place[order[k - 1]] : k + 1; });
+  pk.hands = act.map((p, i) => ({ id: p.id, h: hands[i], place: place[i] }));
   pk.why = order.length > 1 ? Poker.explain(hands[order[0]], hands[order[1]]) : '';
+  const top = hands[order[0]], second = order.length > 1 ? hands[order[1]] : null;
+  pk.vs = second ? Object.assign(Poker.reasonParts(top, second), { win: act[order[0]].id, lose: act[order[1]].id }) : { solo: true, win: act[order[0]].id, catA: top.categoryZh };
   if (best.length > 1) {
     // 最強的牌平手：不指定贏家，過幾秒自動重打一局
     pk.tie = true;
@@ -336,6 +344,7 @@ function view(room, viewer) {
     port: PORT,
   };
 }
+const pubOfId = (room, id) => { const p = room.players.find(x => x.id === id); return p ? p.pub : null; };
 function pkView(room, spec, peek) {
   const pk = room.pk, st = pk.stage, over = st === 'result';
   const face = c => ({ id: c.id, s: c.suit, r: c.rank });
@@ -343,13 +352,15 @@ function pkView(room, spec, peek) {
   return {
     stage: st,
     board: see ? pk.board.map(face) : null,
-    community: st === 'memorize' ? null : pk.community.map(face),
+    community: st === 'ready' || st === 'memorize' ? null : pk.community.map(face),
     hands: over && pk.hands ? pk.hands.map(x => {
       const pl = room.players.find(p => p.id === x.id);
-      return { pub: pl ? pl.pub : null, cards: x.h.displayCards.map(face), en: x.h.categoryName, zh: x.h.categoryZh };
+      return { pub: pl ? pl.pub : null, cards: x.h.displayCards.map(face), en: x.h.categoryName, zh: x.h.categoryZh, cat: x.h.category, place: x.place };
     }) : null,
     why: over ? pk.why : '',
+    vs: over && pk.vs ? Object.assign({}, pk.vs, { win: pubOfId(room, pk.vs.win), lose: pubOfId(room, pk.vs.lose) }) : null,
     tie: over && !!pk.tie,
+    solo: room.raceCount < 2,
     tieMs: POKER_TIE_MS,
     selSec: POKER_SEL_SEC,
   };
@@ -381,8 +392,9 @@ function newMember(name, role) {
 
 // ---------- API ----------
 const api = {
-  rooms() {
+  rooms({ kind } = {}) {
     const list = [...rooms.values()].filter(anyOnline)
+      .filter(r => !kind || (kind === 'poker') === (r.settings.game === 'poker'))
       .sort((a, b) => (Number(joinable(b)) - Number(joinable(a))) || (b.created - a.created))
       .map(summary);
     return { rooms: list };
@@ -439,6 +451,7 @@ const memberApi = {
     if (inGame(room)) throw new Error('遊戲進行中不能改設定');
     patch = patch || {};
     const next = cleanSettings(patch, room.settings);
+    if ((next.game === 'poker') !== (room.settings.game === 'poker')) throw new Error('記憶撲克和 1A1B 是不同的遊戲，不能在房間裡切換');
     if (room.players.length > MAX[next.game]) throw new Error('現在有 ' + room.players.length + ' 位玩家，' + { duel: '1 對 1 只能 2 人', race: '多人競速最多 8 人', poker: '記憶撲克最多 4 人' }[next.game]);
     room.settings = next;
     if (typeof patch.roomName === 'string') room.name = cleanText(patch.roomName, 16);
@@ -450,7 +463,8 @@ const memberApi = {
     if (inGame(room)) throw new Error('遊戲已經開始了');
     const n = room.players.length;
     if (room.settings.game === 'duel' && n !== 2) throw new Error('1 對 1 需要剛好 2 位玩家');
-    if (room.settings.game !== 'duel' && n < 2) throw new Error('至少要 2 位玩家');
+    if (room.settings.game === 'race' && n < 2) throw new Error('至少要 2 位玩家');
+    if (room.settings.game === 'poker' && n < 1) throw new Error('至少要 1 位玩家');
     startGame(room);
     broadcast(room);
     return { ok: true };

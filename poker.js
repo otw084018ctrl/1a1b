@@ -113,17 +113,25 @@ function bestOf(hands) {
   }
   return best;
 }
-// 用白話說明 a 為什麼贏過 b（a 一定要是較強的那一手；平手回傳空字串）
-function explain(a, b) {
+// a 為什麼贏過 b（a 要是較強的那一手）：牌型不同就只看牌型；牌型相同就找出第一個分出高下的項目
+function reasonParts(a, b) {
   const x = a.comparisonValues, y = b.comparisonValues;
-  if (x[0] !== y[0]) return a.categoryZh + '勝過' + b.categoryZh;
+  const out = { same: x[0] === y[0], catA: a.categoryZh, catB: b.categoryZh, label: '', hi: '', lo: '' };
+  if (!out.same) return out;
   for (let i = 1; i < x.length; i++) {
     if (x[i] !== y[i]) {
-      const label = SLOT_LABEL[x[0]][i - 1] || '點數';
-      return '同為' + a.categoryZh + '，' + label + ' ' + rankName(x[i]) + ' 大於 ' + rankName(y[i]);
+      out.label = SLOT_LABEL[x[0]][i - 1] || '點數';
+      out.hi = rankName(x[i]); out.lo = rankName(y[i]);
+      return out;
     }
   }
-  return '';
+  return out;
+}
+// 用一句白話說明（平手回傳空字串）
+function explain(a, b) {
+  const r = reasonParts(a, b);
+  if (!r.same) return r.catA + '勝過' + r.catB;
+  return r.label ? '同為' + r.catA + '，' + r.label + ' ' + r.hi + ' 大於 ' + r.lo : '';
 }
 
-module.exports = { SUITS, rankName, makeDeck, shuffle, dealRound, evaluateHand, compareHands, bestOf, explain, card };
+module.exports = { SUITS, rankName, makeDeck, shuffle, dealRound, evaluateHand, compareHands, bestOf, explain, reasonParts, card };
