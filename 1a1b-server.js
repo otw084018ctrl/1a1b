@@ -5,12 +5,17 @@ const os = require('os');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const Poker = require('./poker.js');
 
 const PORT = Number(process.env.PORT) || 3000;
 const envList = (k, d) => (process.env[k] ? process.env[k].split(',').map(Number) : d);
 const SET_OPTIONS = envList('SET_OPTIONS', [10, 20, 30]);  // 1 對 1 設定數字時間（秒）
 const TURN_OPTIONS = envList('TURN_OPTIONS', [0, 40, 60]); // 每回合時間（秒），0 = 不限
-const MAX = { duel: 2, race: 8 };  // 各玩法人數上限
+const MEM_OPTIONS = envList('MEM_OPTIONS', [10, 20, 30]);  // 記憶撲克：記憶時間（秒）
+const POKER_SEL_SEC = Number(process.env.POKER_SEL_SEC) || 60;       // 記憶撲克：選牌時間（秒）
+const POKER_REVEAL_MS = Number(process.env.POKER_REVEAL_MS) || 3500; // 蠟印全部亮出來之後，等多久才翻牌
+const POKER_TIE_MS = Number(process.env.POKER_TIE_MS) || 6000;       // 平手後多久自動重打一局
+const MAX = { duel: 2, race: 8, poker: 4 };  // 各玩法人數上限
 const MAX_SPECS = 30;
 const CHAT_MAX = 60;
 const IDLE_MS = 10 * 60 * 1000;    // 房間沒人在線超過這個時間就關掉
@@ -67,6 +72,7 @@ const inGame = room => room.phase === 'setting' || room.phase === 'playing';
 const joinable = room => !inGame(room) && room.players.length < MAX[room.settings.game];
 // 各玩法／位數可選的每回合秒數（0 = 不限；多人競速不能不限，一個人發呆全場都在等）
 function turnChoices(game, digits) {
+  if (game === 'poker') return [0]; // 記憶撲克的時間由記憶秒數與固定選牌時間決定
   if (process.env.TURN_OPTIONS) return game === 'race' ? TURN_OPTIONS.filter(t => t > 0) : TURN_OPTIONS;
   if (game === 'race') return digits === 5 ? [60, 90] : [40, 60];
   return digits === 5 ? [0, 60, 90] : [0, 40, 60];
@@ -74,7 +80,9 @@ function turnChoices(game, digits) {
 const nearest = (list, v) => list.reduce((b, x) => (Math.abs(x - v) < Math.abs(b - v) ? x : b), list[0]);
 function cleanSettings(src, base) {
   const s = Object.assign({}, base);
-  if (src.game === 'duel' || src.game === 'race') s.game = src.game;
+  if (src.game === 'duel' || src.game === 'race' || src.game === 'poker') s.game = src.game;
+  if (MEM_OPTIONS.includes(Number(src.memSec))) s.memSec = Number(src.memSec);
+  if (!MEM_OPTIONS.includes(s.memSec)) s.memSec = 20;
   if (src.hint === 'normal' || src.hint === 'easy') s.hint = src.hint;
   if (SET_OPTIONS.includes(Number(src.setSec))) s.setSec = Number(src.setSec);
   if (DIGIT_OPTIONS.includes(Number(src.digits))) s.digits = Number(src.digits);
@@ -107,7 +115,8 @@ function arm(room, sec, fn) {
 }
 function resume(room) {
   if (!room.paused || room.phase !== 'playing') return;
-  if (room.settings.game === 'duel') setTurn(room, room.turn);
+  if (room.settings.game === 'poker') armPoker(room);
+  else if (room.settings.game === 'duel') setTurn(room, room.turn);
   else armRound(room);
 }
 
@@ -115,9 +124,12 @@ function resume(room) {
 function startGame(room) {
   room.result = null;
   room.lastChance = false;
-  for (const p of room.players) { p.secret = null; p.auto = false; p.out = false; p.guesses = []; }
+  for (const p of room.players) { p.secret = null; p.auto = false; p.out = false; p.guesses = []; p.pick = []; p.locked = false; p.timedOut = false; }
   room.lastIds = new Set(room.players.map(p => p.id));
-  if (room.settings.game === 'duel') {
+  clearTimeout(room.tieTimer);
+  if (room.settings.game === 'poker') {
+    startPoker(room);
+  } else if (room.settings.game === 'duel') {
     room.starter = room.players[room.flip % 2].id; // 先後手每局交換
     room.flip++;
     room.phase = 'setting';
@@ -144,6 +156,68 @@ function finish(room, winners, reason, by) {
   room.phase = 'over';
   const nameOf = id => (room.players.find(p => p.id === id) || {}).name || '';
   room.result = { winners, names: winners.map(nameOf), reason, by: by || null, byName: by ? nameOf(by) : '' };
+}
+
+// ---------- 記憶撲克 ----------
+// 階段（room.pk.stage）：memorize 記憶 → select 選牌 → reveal 亮出蠟印 → result 翻牌比大小
+function startPoker(room) {
+  const d = Poker.dealRound();
+  room.pk = { board: d.board, community: d.community, stage: 'memorize', hands: null, why: '', tie: false };
+  room.raceCount = room.players.length;
+  room.phase = 'playing';
+  armPoker(room);
+}
+function armPoker(room) {
+  const pk = room.pk, st = pk.stage;
+  if (st === 'memorize') arm(room, room.settings.memSec, () => { if (room.phase === 'playing' && pk.stage === 'memorize') { pk.stage = 'select'; armPoker(room); } });
+  else if (st === 'select') arm(room, POKER_SEL_SEC, () => { if (room.phase === 'playing' && pk.stage === 'select') pokerSelectTimeout(room); });
+  else if (st === 'reveal') arm(room, POKER_REVEAL_MS / 1000, () => { if (room.phase === 'playing' && pk.stage === 'reveal') showdown(room); });
+}
+// 選牌時間到：已選兩張的自動鎖定，沒選完的判逾時失敗（規則可在這裡調整）
+function pokerSelectTimeout(room) {
+  for (const p of active(room)) {
+    if (p.pick.length === 2) p.locked = true;
+    else { p.out = true; p.timedOut = true; }
+  }
+  const act = active(room);
+  if (act.length) startReveal(room); else pokerEnd(room, [], 'allOut');
+}
+function startReveal(room) {
+  room.pk.stage = 'reveal';
+  armPoker(room);
+}
+// 有人鎖定、投降或離開之後，檢查要不要往下走
+function pokerProceed(room) {
+  if (room.phase !== 'playing' || !room.pk) return;
+  const act = active(room);
+  if (act.length === 0) return pokerEnd(room, [], 'allOut');
+  if (act.length === 1 && !act[0].locked) return pokerEnd(room, [act[0].id], 'othersOut');
+  if (room.pk.stage === 'select' && act.every(p => p.locked)) startReveal(room);
+}
+function pokerEnd(room, winners, reason) {
+  room.pk.stage = 'result';
+  for (const p of room.players) if (room.lastIds.has(p.id)) p.played = (p.played || 0) + 1;
+  for (const id of winners) { const w = room.players.find(p => p.id === id); if (w) w.wins = (w.wins || 0) + 1; }
+  finish(room, winners, reason);
+}
+function showdown(room) {
+  const pk = room.pk;
+  const act = active(room).filter(p => p.locked);
+  const hands = act.map(p => Poker.evaluateHand([pk.board[p.pick[0]], pk.board[p.pick[1]]].concat(pk.community)));
+  pk.hands = act.map((p, i) => ({ id: p.id, h: hands[i] }));
+  const best = Poker.bestOf(hands);
+  const order = hands.map((_, i) => i).sort((i, j) => { const r = Poker.compareHands(hands[i], hands[j]); return r === 'A' ? -1 : r === 'B' ? 1 : 0; });
+  pk.why = order.length > 1 ? Poker.explain(hands[order[0]], hands[order[1]]) : '';
+  if (best.length > 1) {
+    // 最強的牌平手：不指定贏家，過幾秒自動重打一局
+    pk.tie = true;
+    pokerEnd(room, [], 'tie');
+    room.tieTimer = setTimeout(() => {
+      if (rooms.get(room.code) !== room || room.phase !== 'over' || room.settings.game !== 'poker' || room.players.length < 2) return;
+      startGame(room);
+      broadcast(room);
+    }, POKER_TIE_MS);
+  } else pokerEnd(room, [act[best[0]].id], 'poker');
 }
 
 // ---------- 1 對 1 ----------
@@ -223,12 +297,16 @@ function view(room, viewer) {
     let guesses = p.guesses;
     if (hideRace && !mine) guesses = p.guesses.filter(x => x.round < room.round).map(x => x.timeout ? { timeout: true } : { a: x.a, b: x.b });
     const showSecret = mine || over || (spec && peek);
-    return {
+    const pkx = g === 'poker' && room.pk ? {
+      pick: mine || room.pk.stage === 'reveal' || room.pk.stage === 'result' || (spec && peek) ? p.pick : null,
+      pickN: (p.pick || []).length, locked: !!p.locked, timedOut: !!p.timedOut, wins: p.wins || 0, played: p.played || 0,
+    } : {};
+    return Object.assign(pkx, {
       pub: p.pub, name: p.name, online: !!p.res, host: room.host === p.id, me: mine,
       secret: showSecret ? p.secret : null, ready: !!p.secret, auto: mine && p.auto,
       out: p.out, submitted: g === 'race' && room.phase === 'playing' && !!room.submitted && room.submitted.has(p.id),
       guesses,
-    };
+    });
   });
   return {
     code: room.code,
@@ -244,6 +322,7 @@ function view(room, viewer) {
     lastChance: !!room.lastChance,
     round: g === 'race' ? room.round || 0 : 0,
     answer: g === 'race' && (over || (spec && peek)) ? room.secret : null,
+    pk: g === 'poker' && room.pk && phase !== 'waiting' ? pkView(room, spec, peek) : null,
     msLeft: room.deadline ? Math.max(0, room.deadline - Date.now()) : 0,
     msTotal: room.total || 0,
     paused: !!room.paused,
@@ -255,6 +334,24 @@ function view(room, viewer) {
     chat: room.chat.map(m => ({ id: m.id, name: m.name, text: m.text, spec: m.spec, from: m.pub, mine: m.from === viewer.id })),
     ips: lanIPs(),
     port: PORT,
+  };
+}
+function pkView(room, spec, peek) {
+  const pk = room.pk, st = pk.stage, over = st === 'result';
+  const face = c => ({ id: c.id, s: c.suit, r: c.rank });
+  const see = st === 'memorize' || over || (spec && peek); // 蓋牌階段只有記憶時間看得到牌面
+  return {
+    stage: st,
+    board: see ? pk.board.map(face) : null,
+    community: st === 'memorize' ? null : pk.community.map(face),
+    hands: over && pk.hands ? pk.hands.map(x => {
+      const pl = room.players.find(p => p.id === x.id);
+      return { pub: pl ? pl.pub : null, cards: x.h.displayCards.map(face), en: x.h.categoryName, zh: x.h.categoryZh };
+    }) : null,
+    why: over ? pk.why : '',
+    tie: over && !!pk.tie,
+    tieMs: POKER_TIE_MS,
+    selSec: POKER_SEL_SEC,
   };
 }
 function broadcast(room) {
@@ -271,6 +368,7 @@ function summary(room) {
 }
 function closeRoom(room) {
   clearTimers(room);
+  clearTimeout(room.tieTimer);
   for (const m of members(room)) if (m.res) m.res.end();
   rooms.delete(room.code);
 }
@@ -278,7 +376,7 @@ function findMember(room, id) {
   return room.players.find(p => p.id === id) || room.specs.find(s => s.id === id);
 }
 function newMember(name, role) {
-  return { id: crypto.randomUUID(), pub: shortId(), name, role, res: null, offAt: 0, dropTimer: null, lastChat: 0, secret: null, auto: false, out: false, guesses: [] };
+  return { id: crypto.randomUUID(), pub: shortId(), name, role, res: null, offAt: 0, dropTimer: null, lastChat: 0, secret: null, auto: false, out: false, guesses: [], pick: [], locked: false, timedOut: false, wins: 0, played: 0 };
 }
 
 // ---------- API ----------
@@ -306,7 +404,7 @@ const api = {
         code, name: cleanText(roomName, 16), players: [], specs: [], host: null,
         flip: crypto.randomInt(2), lastIds: new Set(), // 1 對 1 第一局誰先手是隨機的
         phase: 'waiting', chat: [], chatSeq: 0, created: Date.now(), idleSince: Date.now(),
-        settings: cleanSettings(settings || {}, { game: 'duel', hint: 'normal', digits: 4, setSec: 10, turnSec: 0, peek: 'off' }),
+        settings: cleanSettings(settings || {}, { game: 'duel', hint: 'normal', digits: 4, memSec: 20, setSec: 10, turnSec: 0, peek: 'off' }),
       };
       rooms.set(code, room);
       role = 'player';
@@ -341,7 +439,7 @@ const memberApi = {
     if (inGame(room)) throw new Error('遊戲進行中不能改設定');
     patch = patch || {};
     const next = cleanSettings(patch, room.settings);
-    if (next.game === 'duel' && room.players.length > 2) throw new Error('現在有 ' + room.players.length + ' 位玩家，1 對 1 只能 2 人');
+    if (room.players.length > MAX[next.game]) throw new Error('現在有 ' + room.players.length + ' 位玩家，' + { duel: '1 對 1 只能 2 人', race: '多人競速最多 8 人', poker: '記憶撲克最多 4 人' }[next.game]);
     room.settings = next;
     if (typeof patch.roomName === 'string') room.name = cleanText(patch.roomName, 16);
     broadcast(room);
@@ -352,7 +450,7 @@ const memberApi = {
     if (inGame(room)) throw new Error('遊戲已經開始了');
     const n = room.players.length;
     if (room.settings.game === 'duel' && n !== 2) throw new Error('1 對 1 需要剛好 2 位玩家');
-    if (room.settings.game === 'race' && n < 2) throw new Error('至少要 2 位玩家');
+    if (room.settings.game !== 'duel' && n < 2) throw new Error('至少要 2 位玩家');
     startGame(room);
     broadcast(room);
     return { ok: true };
@@ -362,7 +460,7 @@ const memberApi = {
     if (!joinable(room)) throw new Error(inGame(room) ? '等這局結束才能加入' : '玩家已滿');
     room.specs.splice(room.specs.indexOf(m), 1);
     m.role = 'player';
-    Object.assign(m, { secret: null, auto: false, out: false, guesses: [] });
+    Object.assign(m, { secret: null, auto: false, out: false, guesses: [], pick: [], locked: false, timedOut: false, wins: 0, played: 0 });
     room.players.push(m);
     if (!room.host) room.host = m.id;
     broadcast(room);
@@ -370,7 +468,7 @@ const memberApi = {
   },
   secret({ secret }, room, m) {
     if (m.role !== 'player') throw new Error('觀戰中不能設定數字');
-    if (room.phase !== 'setting') throw new Error('現在不能設定數字');
+    if (room.settings.game === 'poker' || room.phase !== 'setting') throw new Error('現在不能設定數字');
     if (!valid(secret, room.settings.digits)) throw new Error(badDigits(room.settings.digits));
     m.secret = secret;
     if (room.players.every(p => p.secret)) startDuel(room); // 兩人都設好就提早開始
@@ -379,7 +477,7 @@ const memberApi = {
   },
   guess({ guess }, room, m) {
     if (m.role !== 'player') throw new Error('觀戰中不能猜');
-    if (room.phase !== 'playing') throw new Error('遊戲尚未開始');
+    if (room.phase !== 'playing' || room.settings.game === 'poker') throw new Error('遊戲尚未開始');
     if (!valid(guess, room.settings.digits)) throw new Error(badDigits(room.settings.digits));
     const easy = room.settings.hint === 'easy';
     if (room.settings.game === 'duel') {
@@ -401,6 +499,32 @@ const memberApi = {
     broadcast(room);
     return { ok: true };
   },
+  // 記憶撲克：點一張蓋牌放上蠟印，再點一次取消；每人最多 2 張
+  pick({ idx }, room, m) {
+    if (room.settings.game !== 'poker' || room.phase !== 'playing' || room.pk.stage !== 'select') throw new Error('現在不能選牌');
+    if (m.role !== 'player' || m.out) throw new Error('你不能選牌');
+    if (m.locked) throw new Error('你已經鎖定了');
+    idx = Number(idx);
+    if (!Number.isInteger(idx) || idx < 0 || idx > 15) throw new Error('位置不對');
+    const at = m.pick.indexOf(idx);
+    if (at >= 0) m.pick.splice(at, 1);
+    else {
+      if (m.pick.length >= 2) throw new Error('最多選 2 張，先點已選的牌取消');
+      m.pick.push(idx);
+    }
+    broadcast(room);
+    return { ok: true };
+  },
+  lock(_, room, m) {
+    if (room.settings.game !== 'poker' || room.phase !== 'playing' || room.pk.stage !== 'select') throw new Error('現在不能鎖定');
+    if (m.role !== 'player' || m.out) throw new Error('你不能選牌');
+    if (m.locked) return { ok: true };
+    if (m.pick.length !== 2) throw new Error('要先選滿 2 張');
+    m.locked = true;
+    pokerProceed(room);
+    broadcast(room);
+    return { ok: true };
+  },
   chat({ text }, room, m) {
     text = cleanText(text, 100);
     if (!text) throw new Error('訊息是空的');
@@ -413,7 +537,12 @@ const memberApi = {
   },
   surrender(_, room, m) {
     if (m.role !== 'player' || !inGame(room)) throw new Error('現在不能投降');
-    if (room.settings.game === 'duel') finish(room, [opponent(room, m.id).id], 'surrender', m.id);
+    if (room.settings.game === 'poker') {
+      if (m.out) throw new Error('你已經投降了');
+      if (room.pk.stage === 'reveal') throw new Error('正在揭曉，等結果吧');
+      m.out = true;
+      pokerProceed(room);
+    } else if (room.settings.game === 'duel') finish(room, [opponent(room, m.id).id], 'surrender', m.id);
     else {
       if (m.out) throw new Error('你已經投降了');
       m.out = true;
@@ -433,7 +562,8 @@ const memberApi = {
       if (wasIn && room.settings.game === 'duel') {
         finish(room, room.players.map(p => p.id), 'left', null);
         room.result.byName = m.name;
-      } else if (wasIn) checkRaceLeft(room);
+      } else if (wasIn && room.settings.game === 'poker') pokerProceed(room);
+      else if (wasIn) checkRaceLeft(room);
       if (room.host === m.id) room.host = room.players[0] ? room.players[0].id : null;
     }
     if (!members(room).length) { closeRoom(room); return { ok: true }; }

@@ -57,7 +57,7 @@ input.need{border-color:var(--warn)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;color:var(--mute)}
 .tag{font-size:11px;border:1px solid currentColor;border-radius:5px;padding:0 6px;letter-spacing:.04em;flex:none;line-height:18px}
-.tag.easy{color:var(--a)}.tag.multi{color:var(--me)}.tag.host{color:var(--b)}.tag.five{color:var(--b)}.tag.spec{color:var(--mute)}
+.tag.easy{color:var(--a)}.tag.multi{color:var(--me)}.tag.host{color:var(--b)}.tag.beta{color:var(--b)}.tag.five{color:var(--b)}.tag.spec{color:var(--mute)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
 .dot.on{background:var(--a)}
 .textbtn{border:0;background:none;padding:6px 2px;font-size:14px;color:var(--mute);position:relative}
@@ -269,6 +269,59 @@ input.need{border-color:var(--warn)}
 .cform input{height:42px;border-radius:21px}
 .cform .btn{height:42px;border-radius:21px}
 
+/* ---------- 記憶撲克 ---------- */
+.field.stack{flex-direction:column;align-items:stretch;gap:8px}
+.field.stack .seg button{flex:1;padding-left:4px;padding-right:4px}
+.pk{padding:12px 0 18px;display:flex;flex-direction:column;gap:14px}
+.pkhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-height:34px}
+.pkhead .lbl{font-size:12px;letter-spacing:.08em;color:var(--mute)}
+.pkhead .cnt{font:700 34px/1 var(--mono);font-variant-numeric:tabular-nums}
+.pkhead .cnt.low{color:var(--warn)}
+.comm{display:flex;align-items:center;gap:12px}
+.comm .lbl{font-size:12px;letter-spacing:.08em;color:var(--mute);flex:none;width:2.6em}
+.comm .cards{display:flex;gap:8px}
+.comm .pc{width:50px}
+.pkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.pc{position:relative;aspect-ratio:5/6;perspective:700px;border:0;background:none;padding:0;border-radius:9px;display:block;transition:transform .15s}
+.pc .in{position:absolute;inset:0;transition:transform .55s cubic-bezier(.3,.7,.3,1) var(--d,0s);transform-style:preserve-3d}
+.pc.up .in{transform:rotateY(180deg)}
+.pc .b,.pc .f{position:absolute;inset:0;border-radius:9px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.pc .b{background:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 2px,transparent 2px 8px),linear-gradient(160deg,#35495f,#212f3d);border:1px solid #17212b}
+.pc .b::after{content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,.2);border-radius:5px}
+.pc .f{transform:rotateY(180deg)}
+.cf{background:#f6f4ee;border:1px solid #d6d1c3;color:#1b1e22;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:9px}
+.cf.red{color:#b3261e}
+.cf b{font:700 24px/1 var(--mono)}
+.cf i{font-style:normal;font-size:28px;line-height:1}
+.comm .cf b{font-size:17px}.comm .cf i{font-size:20px}
+.pc.dim .f{opacity:.45}
+.pkgrid .pc:not(.up){cursor:pointer}
+.pkgrid .pc.mine{transform:translateY(-3px)}
+.pkgrid .pc.off{cursor:default}
+.seals{position:absolute;inset:0;pointer-events:none}
+.seal{position:absolute;left:50%;top:50%;width:28px;height:28px;margin:calc(-14px + var(--oy,0px)) 0 0 calc(-14px + var(--ox,0px));border-radius:50%;display:grid;place-items:center;font:700 13px var(--sans);color:rgba(255,255,255,.94);background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.3),transparent 45%),var(--sc,#b2392f);box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 0 0 2px rgba(0,0,0,.2),inset 0 0 0 4px rgba(255,255,255,.12);animation:stamp .34s cubic-bezier(.2,.9,.3,1.2);transition:left .4s,top .4s,width .4s,height .4s,margin .4s,font-size .4s}
+.pc.up .seal{left:100%;top:0;width:18px;height:18px;font-size:10px;margin:calc(2px + var(--uy,0px)) 0 0 -22px}
+@keyframes stamp{from{transform:scale(1.9);opacity:0}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute)}
+.legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.legend i{width:10px;height:10px;border-radius:50%;background:var(--sc);flex:none}
+.legend b{color:var(--ink);font-weight:600}
+.hand{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px;animation:rise .45s .95s both}
+.hand.win{border-color:var(--a);box-shadow:inset 0 0 0 1px var(--a)}
+.hand .hh{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.hand .nm{font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}
+.hand .nm i{width:10px;height:10px;border-radius:50%;background:var(--sc);flex:none}
+.hand .cat{font-weight:700;white-space:nowrap}.hand .cat small{font-weight:400;color:var(--mute);margin-left:6px}
+.hand .five{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.hand .cf{aspect-ratio:5/6;gap:0}
+.hand .cf b{font-size:18px}.hand .cf i{font-size:20px}
+.hand .cf.pickd{box-shadow:0 0 0 2px var(--c)}
+.hand .na{font-size:13px;color:var(--mute)}
+#pkRes{display:flex;flex-direction:column;gap:10px}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+#pkDock .btn{width:100%}
+#pkMsg{min-height:20px;text-align:center;font-size:13px;color:var(--mute);margin-bottom:8px}
+#pkMsg.err{color:var(--warn)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 <div class="app">
@@ -276,7 +329,7 @@ input.need{border-color:var(--warn)}
 <!-- 大廳 -->
 <section id="lobby" class="screen lobby">
   <div class="mark">1<i>A</i>1<u>B</u></div>
-  <p class="rules">猜出 4 或 5 位數（開房時選），數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先全部猜對（4A 或 5A）的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。</p>
+  <p class="rules">猜出 4 或 5 位數（開房時選），數字不重複、首位不為 0。<b class="ta">A</b>＝數字與位置都對，<b class="tb">B</b>＝數字對但位置不對。<br><b>1 對 1</b>：兩人各設一組數字，輪流猜對方的，先全部猜對（4A 或 5A）的人獲勝；先手猜中時，後手還有一次追平機會。<br><b>多人競速</b>：系統出一組數字，2–8 人每回合各猜一次，最快猜中的人贏。<br>簡單模式會直接報 A 的位置。<br><b>記憶撲克（beta）</b>：先在限時內記住 16 張牌的位置，牌翻回去後憑記憶選 2 張，加上 3 張公牌組成五張牌比撲克牌型。</p>
   <div class="group" style="border-top:0;padding-top:0">
     <label class="glabel" for="name">你的名字</label>
     <input id="name" maxlength="12" placeholder="輸入暱稱" autocomplete="off" enterkeyhint="done">
@@ -284,12 +337,13 @@ input.need{border-color:var(--warn)}
   <div class="group">
     <div class="glabel">開新房間</div>
     <input id="roomName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" enterkeyhint="done" aria-label="房間名稱">
-    <div class="field"><span>玩法</span><div class="seg" id="segGame"></div></div>
-    <div class="field"><span>位數</span><div class="seg" id="segDigits"></div></div>
-    <div class="field"><span>提示</span><div class="seg" id="segHint"></div></div>
+    <div class="field stack"><span>玩法</span><div class="seg" id="segGame"></div></div>
+    <div class="field" id="fieldMem"><span>記憶時間</span><div class="seg" id="segMem"></div></div>
+    <div class="field" id="fieldDigits"><span>位數</span><div class="seg" id="segDigits"></div></div>
+    <div class="field" id="fieldHint"><span>提示</span><div class="seg" id="segHint"></div></div>
     <div class="field"><span>觀戰看答案</span><div class="seg" id="segPeek"></div></div>
     <div class="field" id="fieldSet"><span>設定數字</span><div class="seg" id="segSet"></div></div>
-    <div class="field"><span>每回合思考</span><div class="seg" id="segTurn"></div></div>
+    <div class="field" id="fieldTurn"><span>每回合思考</span><div class="seg" id="segTurn"></div></div>
     <button type="button" class="btn primary" id="createBtn">建立房間</button>
   </div>
   <div class="group">
@@ -330,7 +384,7 @@ input.need{border-color:var(--warn)}
 <!-- 遊戲 -->
 <section id="game" class="screen hide">
   <header class="bar">
-    <div class="left"><span class="title" id="roomTitle"></span><span class="code" id="roomCode"></span><span class="tag multi hide" id="tagRace">多人</span><span class="tag easy hide" id="tagEasy">簡單</span><span class="tag five hide" id="tagFive">5 位</span></div>
+    <div class="left"><span class="title" id="roomTitle"></span><span class="code" id="roomCode"></span><span class="tag multi hide" id="tagRace">多人</span><span class="tag easy hide" id="tagEasy">簡單</span><span class="tag five hide" id="tagFive">5 位</span><span class="tag beta hide" id="tagBeta">β</span></div>
     <div class="right">
       <button type="button" class="textbtn" id="chatBtn">聊天<span class="badge hide" id="badge"></span></button>
       <button type="button" class="textbtn" id="quitBtn">投降</button>
@@ -376,11 +430,23 @@ input.need{border-color:var(--warn)}
     </div>
 
     <div class="race hide" id="raceView"></div>
+
+    <div class="pk hide" id="pkView">
+      <div class="pkhead"><span class="lbl" id="pkLbl"></span><span class="cnt" id="pkCnt"></span></div>
+      <div class="comm"><span class="lbl">公牌</span><div class="cards" id="pkComm"></div></div>
+      <div class="pkgrid" id="pkGrid"></div>
+      <div class="legend" id="pkLegend"></div>
+      <div id="pkRes"></div>
+    </div>
   </main>
 
   <div class="notes hide" id="notes"><span class="lbl">筆記</span></div>
 
   <footer class="dock hide" id="dock">
+    <div class="hide" id="pkDock">
+      <div id="pkMsg"></div>
+      <button type="button" class="btn primary" id="pkLock">鎖定選擇</button>
+    </div>
     <div id="entry">
       <div class="dmsg" id="dmsg"></div>
       <div class="slots" id="slots"></div>
@@ -415,12 +481,13 @@ input.need{border-color:var(--warn)}
       <div class="phead"><b>房間設定</b><button type="button" class="textbtn" data-close>取消</button></div>
       <div class="pbody">
         <input id="sName" maxlength="16" placeholder="房間名稱（可不填）" autocomplete="off" aria-label="房間名稱">
-        <div class="field"><span>玩法</span><div class="seg" id="sGame"></div></div>
-        <div class="field"><span>位數</span><div class="seg" id="sDigits"></div></div>
-        <div class="field"><span>提示</span><div class="seg" id="sHint"></div></div>
+        <div class="field stack"><span>玩法</span><div class="seg" id="sGame"></div></div>
+        <div class="field" id="sFieldMem"><span>記憶時間</span><div class="seg" id="sMem"></div></div>
+        <div class="field" id="sFieldDigits"><span>位數</span><div class="seg" id="sDigits"></div></div>
+        <div class="field" id="sFieldHint"><span>提示</span><div class="seg" id="sHint"></div></div>
         <div class="field"><span>觀戰看答案</span><div class="seg" id="sPeek"></div></div>
         <div class="field" id="sFieldSet"><span>設定數字</span><div class="seg" id="sSet"></div></div>
-        <div class="field"><span>每回合思考</span><div class="seg" id="sTurn"></div></div>
+        <div class="field" id="sFieldTurn"><span>每回合思考</span><div class="seg" id="sTurn"></div></div>
         <div class="msg" id="sMsg"></div>
       </div>
       <div class="pfoot"><button type="button" class="btn primary" id="sSave" style="width:100%">儲存設定</button></div>
@@ -446,7 +513,12 @@ const EMOJI_SET = new Set(EMOJI.map(e => e[0]));
 const EYE = '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 
-const GAME_LABEL = { duel: '1 對 1', race: '多人競速' };
+const GAME_LABEL = { duel: '1 對 1', race: '多人競速', poker: '記憶撲克' };
+const gameSegLabel = o => GAME_LABEL[o] + (o === 'poker' ? ' β' : '');
+function settingChips(st) {
+  if (st.game === 'poker') return ['記憶撲克 β', '記憶 ' + st.memSec + ' 秒', '選牌 60 秒'];
+  return [GAME_LABEL[st.game], digitsLabel(st.digits || 4), hintLabel(st.hint), st.game === 'duel' ? '設定數字 ' + st.setSec + ' 秒' : '', turnLabel(st.turnSec)].filter(Boolean);
+}
 const hintLabel = h => h === 'easy' ? '簡單模式' : '標準模式';
 const digitsLabel = n => n + ' 位數';
 const turnLabel = t => t ? '每回合 ' + t + ' 秒' : '不限時';
@@ -485,7 +557,7 @@ function seg(el, opts, fmt, val, onChange) {
   };
   paint();
 }
-const pick = (key, opts) => { const v = LS.get(key); return opts.map(String).includes(v) ? v : String(opts[0]); };
+const pick = (key, opts) => { const v = LS.get(key); return opts.map(String).includes(v) ? v : String(key === '1a1b-mem' ? 20 : opts[0]); };
 function lobbySeg(id, key, opts, fmt, after) {
   seg($(id), opts, fmt, pick(key, opts), v => { LS.set(key, v); if (after) after(); });
 }
@@ -497,12 +569,14 @@ function buildTurn(el, game, digits, want, onChange) {
   seg(el, opts, fmtTurn, v, onChange);
 }
 const syncLobby = () => {
-  const game = $('segGame').dataset.val;
+  const game = $('segGame').dataset.val, pk = game === 'poker';
   show('fieldSet', game === 'duel');
+  show('fieldMem', pk); show('fieldDigits', !pk); show('fieldHint', !pk); show('fieldTurn', !pk);
   buildTurn($('segTurn'), game, $('segDigits').dataset.val, LS.get('1a1b-turn2'), v => LS.set('1a1b-turn2', v));
 };
 const fmtPeek = o => o === 'on' ? '可以' : '不可';
-lobbySeg('segGame', '1a1b-game', ['duel', 'race'], o => GAME_LABEL[o], syncLobby);
+lobbySeg('segGame', '1a1b-game', ['duel', 'race', 'poker'], gameSegLabel, syncLobby);
+lobbySeg('segMem', '1a1b-mem', [10, 20, 30], o => o + ' 秒');
 lobbySeg('segDigits', '1a1b-digits', [4, 5], o => o + ' 位', syncLobby);
 lobbySeg('segHint', '1a1b-mode', ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準');
 lobbySeg('segPeek', '1a1b-peek', ['off', 'on'], fmtPeek);
@@ -528,7 +602,7 @@ async function enter(code, role, nameIn, msgEl) {
     const j = await post('join', {
       room: code, name, role, pid: code ? SS.get('1a1b-pid-' + code) : null,
       roomName: $('roomName').value,
-      settings: { game: $('segGame').dataset.val, digits: $('segDigits').dataset.val, hint: $('segHint').dataset.val, peek: $('segPeek').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val },
+      settings: { game: $('segGame').dataset.val, memSec: $('segMem').dataset.val, digits: $('segDigits').dataset.val, hint: $('segHint').dataset.val, peek: $('segPeek').dataset.val, setSec: $('segSet').dataset.val, turnSec: $('segTurn').dataset.val },
     });
     room = j.room; pid = j.pid;
     SS.set('1a1b-pid-' + room, pid);
@@ -556,7 +630,7 @@ async function loadRooms() {
   try { list = (await post('rooms')).rooms; } catch (e) { return; }
   $('rlist').innerHTML = list.length ? list.map(r => {
     const state = r.phase === 'setting' || r.phase === 'playing' ? '對戰中' : r.players + '/' + r.max + ' 人';
-    const meta = [GAME_LABEL[r.settings.game], (r.settings.digits || 4) === 5 ? '5 位數' : '', state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
+    const meta = [r.settings.game === 'poker' ? '記憶撲克 β' : GAME_LABEL[r.settings.game], r.settings.game !== 'poker' && (r.settings.digits || 4) === 5 ? '5 位數' : '', state, r.specs ? '觀戰 ' + r.specs : '', r.host ? r.host + ' 開的' : ''].filter(Boolean).join(' · ');
     return '<div class="ritem"><div class="info"><div class="nm">' + esc(roomTitle(r.name, r.host)) + '<span class="cd">' + r.code + '</span></div>'
       + '<div class="meta">' + esc(meta) + '</div></div><div class="acts">'
       + '<button type="button" data-code="' + r.code + '" data-role="spec">觀戰</button>'
@@ -582,7 +656,7 @@ async function openInvite(code) {
   $('invHost').textContent = (info.host || '朋友') + ' 邀請你加入';
   $('invName').textContent = roomTitle(info.name, info.host);
   $('invCode').textContent = '房間 ' + info.code;
-  $('invChips').innerHTML = [GAME_LABEL[info.settings.game], digitsLabel(info.settings.digits || 4), hintLabel(info.settings.hint), turnLabel(info.settings.turnSec), info.players + '/' + info.max + ' 人']
+  $('invChips').innerHTML = settingChips(info.settings).concat([info.players + '/' + info.max + ' 人'])
     .map(t => '<span class="chip">' + t + '</span>').join('');
   show('invGo', info.joinable);
   $('invNameNote').textContent = info.joinable ? '加入對戰可不填，觀戰要填' : '這局進行中，可以先觀戰';
@@ -811,9 +885,12 @@ function openSettings() {
   const sync = () => {
     const game = $('sGame').dataset.val;
     show('sFieldSet', game === 'duel');
+    const pk = game === 'poker';
+    show('sFieldMem', pk); show('sFieldDigits', !pk); show('sFieldHint', !pk); show('sFieldTurn', !pk);
     buildTurn($('sTurn'), game, $('sDigits').dataset.val, want, v => { want = v; });
   };
-  seg($('sGame'), ['duel', 'race'], o => GAME_LABEL[o], st.game, sync);
+  seg($('sGame'), ['duel', 'race', 'poker'], gameSegLabel, st.game, sync);
+  seg($('sMem'), [10, 20, 30], o => o + ' 秒', String(st.memSec || 20));
   seg($('sDigits'), [4, 5], o => o + ' 位', String(st.digits || 4), sync);
   seg($('sHint'), ['normal', 'easy'], o => o === 'easy' ? '簡單' : '標準', st.hint);
   seg($('sPeek'), ['off', 'on'], fmtPeek, st.peek);
@@ -823,7 +900,7 @@ function openSettings() {
 }
 $('sSave').onclick = async () => {
   try {
-    await act('settings', { patch: { roomName: $('sName').value, game: $('sGame').dataset.val, digits: $('sDigits').dataset.val, hint: $('sHint').dataset.val, peek: $('sPeek').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
+    await act('settings', { patch: { roomName: $('sName').value, game: $('sGame').dataset.val, memSec: $('sMem').dataset.val, digits: $('sDigits').dataset.val, hint: $('sHint').dataset.val, peek: $('sPeek').dataset.val, setSec: $('sSet').dataset.val, turnSec: $('sTurn').dataset.val } });
     closePanels();
   } catch (e) { $('sMsg').textContent = e.message; }
 };
@@ -843,7 +920,7 @@ $('quitBtn').onclick = async () => {
     return;
   }
   clearTimeout(armTimer); b.classList.remove('arm');
-  try { await act('surrender'); } catch (e) { dmsg(e.message, true); }
+  try { await act('surrender'); } catch (e) { dmsg(e.message, true); pkNote(e.message); }
 };
 async function leave() {
   try { await act('leave'); } catch (e) {}
@@ -874,13 +951,14 @@ function tick() {
   if (!S) return;
   const now = Date.now();
   const sec = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : 0;
+  if (S.pk) { const st = S.pk.stage; $('pkCnt').textContent = (st === 'memorize' || st === 'select') && deadline ? sec : ''; $('pkCnt').classList.toggle('low', sec <= 5); }
   if (S.phase === 'setting') {
     $('count').textContent = sec;
     $('count').classList.toggle('low', sec <= 3);
     $('clock').textContent = '';
     bar((deadline - now) / total, sec <= 3);
-  } else if (S.phase === 'playing' && deadline) {
-    $('clock').textContent = sec + 's';
+  } else if (S.phase === 'playing' && deadline && !(S.pk && S.pk.stage === 'reveal')) {
+    $('clock').textContent = S.pk ? '' : sec + 's';
     $('clock').classList.toggle('low', sec <= 5);
     bar((deadline - now) / total, sec <= 5);
   } else {
@@ -1011,8 +1089,7 @@ function renderRace(s) {
 function renderWait(s) {
   const st = s.settings;
   $('bigCode').textContent = s.code;
-  $('chips').innerHTML = [GAME_LABEL[st.game], digitsLabel(st.digits || 4), hintLabel(st.hint), st.game === 'duel' ? '設定數字 ' + st.setSec + ' 秒' : '', turnLabel(st.turnSec), st.peek === 'on' ? '觀戰可看答案' : '']
-    .filter(Boolean).map(t => '<span class="chip">' + t + '</span>').join('');
+  $('chips').innerHTML = settingChips(st).concat(st.peek === 'on' ? [st.game === 'poker' ? '觀戰可看牌' : '觀戰可看答案'] : []).map(t => '<span class="chip">' + t + '</span>').join('');
   let rows = s.players.map(p => '<div class="prow"><span class="dot' + (p.online ? ' on' : '') + '"></span><span class="nm">' + esc(p.name) + (p.me ? '<small>（你）</small>' : '') + '</span>'
     + (p.host ? '<span class="tag host">房主</span>' : '') + '</div>').join('');
   for (let i = s.players.length; i < Math.min(s.max, s.players.length + (s.settings.game === 'duel' ? 2 : 1)); i++)
@@ -1047,6 +1124,7 @@ function renderActs(s) {
 
 // ---------- 結算 ----------
 function renderOver(s) {
+  show('reveal', true);
   const r = s.result, spec = isSpec(s);
   const me = myPlayer(s);
   const iWon = me && r.winners.includes(me.pub);
@@ -1084,9 +1162,11 @@ function render() {
 
   $('roomTitle').textContent = roomTitle(s.name, host);
   $('roomCode').textContent = s.code;
-  show('tagRace', !duel);
-  show('tagEasy', s.settings.hint === 'easy');
-  show('tagFive', s.settings.digits === 5);
+  const isPk = s.settings.game === 'poker';
+  show('tagRace', s.settings.game === 'race');
+  show('tagBeta', isPk);
+  show('tagEasy', !isPk && s.settings.hint === 'easy');
+  show('tagFive', !isPk && s.settings.digits === 5);
 
   // 觀戰名單：所有人都看得到
   show('watchers', s.specs.length > 0);
@@ -1097,12 +1177,14 @@ function render() {
   // 數字盤用途
   let newMode = null;
   if (me && s.phase === 'setting' && !me.secret) newMode = 'secret';
-  else if (me && playing && !me.out) newMode = 'guess';
+  else if (me && playing && !me.out && !isPk) newMode = 'guess';
   if (newMode !== mode) { resetEntry(); dmsg(''); if (newMode === 'secret' || (newMode === 'guess' && !duel && s.round === 1 && !me.guesses.length)) clearNotes(); }
   mode = newMode;
   canGuess = !!me && playing && !me.out && (duel ? s.turn === me.pub : !me.submitted);
   deadline = s.msLeft ? now + s.msLeft : 0;
   total = s.msTotal || 1;
+  if (isPk) { renderPoker(s); return; }
+  show('pkView', false); show('pkDock', false);
 
   // 狀態列左側
   const opp = duelOpp(s);
@@ -1175,6 +1257,176 @@ function render() {
   renderChat();
   tick();
 }
+
+// ---------- 記憶撲克 ----------
+const PK_COLORS = ['#b2392f', '#2f6aa3', '#2f8a62', '#b8872a'];
+const SUIT_CH = { S: '♠', H: '♥', D: '♦', C: '♣' };
+const RANK_CH = r => ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' }[r] || String(r));
+const faceHTML = c => '<b>' + RANK_CH(c.r) + '</b><i>' + SUIT_CH[c.s] + '</i>';
+const cardCls = c => 'cf' + (c.s === 'H' || c.s === 'D' ? ' red' : '');
+let pkLastStage = '', pkBuilt = false, pkNoteText = '', pkNoteUntil = 0;
+function pkNote(t) { pkNoteText = t; pkNoteUntil = Date.now() + 3500; if (S) renderPokerDock(S); }
+function pkBuild() {
+  if (pkBuilt) return; pkBuilt = true;
+  const card = '<div class="in"><div class="b"></div><div class="f cf"></div></div><div class="seals"></div>';
+  $('pkGrid').innerHTML = Array.from({ length: 16 }, (_, i) => '<button type="button" class="pc" data-i="' + i + '" aria-label="第 ' + (i + 1) + ' 張牌">' + card + '</button>').join('');
+  $('pkComm').innerHTML = [0, 1, 2].map(() => '<div class="pc">' + card + '</div>').join('');
+}
+function pkFace(el, c) { // 牌面資料只在該公開時才放進畫面；翻回背面後清掉，避免從網頁原始碼偷看
+  const f = el.querySelector('.f');
+  if (c) {
+    clearTimeout(el._clr);
+    if (el.dataset.id !== c.id) { f.innerHTML = faceHTML(c); f.className = 'f ' + cardCls(c); el.dataset.id = c.id; }
+  } else if (el.dataset.id) {
+    clearTimeout(el._clr);
+    el._clr = setTimeout(() => { if (!el.classList.contains('up')) { f.innerHTML = ''; f.className = 'f cf'; delete el.dataset.id; } }, 800);
+  }
+}
+function pkSeals(el, list) {
+  const box = el.querySelector('.seals');
+  const have = new Map([...box.children].map(n => [n.dataset.k, n]));
+  for (const [k, n] of have) if (!list.some(x => x.key === k)) n.remove();
+  for (const x of list) {
+    let n = have.get(x.key);
+    if (!n) { n = document.createElement('span'); n.className = 'seal'; n.dataset.k = x.key; n.textContent = x.ch; box.appendChild(n); }
+    n.style.cssText = '--sc:' + x.color + ';--ox:' + x.ox + 'px;--oy:' + x.oy + 'px;--uy:' + x.uy + 'px';
+  }
+}
+const SEAL_POS = { 1: [[0, 0]], 2: [[-9, -7], [9, 7]], 3: [[-10, -8], [10, -2], [-2, 12]], 4: [[-10, -10], [10, -10], [-10, 10], [10, 10]] };
+function renderPoker(s) {
+  pkBuild();
+  const pk = s.pk, spec = isSpec(s), me = myPlayer(s), st = pk ? pk.stage : 'waiting';
+  const waiting = s.phase === 'waiting', over = s.phase === 'over';
+  const canPick = !!me && !spec && st === 'select' && !me.locked && !me.out;
+
+  // 狀態列
+  $('who').innerHTML = '<span>記憶撲克</span><b>' + s.players.length + ' / ' + s.max + ' 人</b>' + (spec ? '<span class="tag spec">觀戰中</span>' : '');
+  let turn = '', sub = '', tcls = 'idle';
+  if (waiting) { turn = s.me.host ? (spec ? '等待開始' : '準備好就開始') : '等待房主開始'; sub = spec ? '你正在觀戰' : ''; }
+  else if (st === 'memorize') { turn = '記住每張牌的位置'; tcls = 'mine'; sub = '時間到牌會全部翻回去'; }
+  else if (st === 'select') {
+    if (spec) turn = '大家選牌中';
+    else if (me && me.out) { turn = '你已退出本局'; sub = '繼續看結果'; }
+    else if (me && me.locked) turn = '已鎖定，等其他人';
+    else { turn = '選 2 張你要的牌'; tcls = 'mine'; }
+    if (!sub) sub = '你的 2 張 + 3 張公牌 = 五張牌比大小';
+  } else if (st === 'reveal') { turn = '揭曉蠟印'; sub = '看看大家選了哪幾張'; tcls = 'mine'; }
+  else turn = '本局結束';
+  $('turn').textContent = turn; $('turn').className = 'turn ' + tcls;
+  $('sub').textContent = sub;
+
+  show('waitView', waiting); show('setView', false); show('board', false); show('raceView', false); show('notes', false); show('entry', false);
+  show('pkView', !waiting);
+  if (waiting) { renderWait(s); lastMoves = -1; }
+
+  if (pk && !waiting) {
+    $('pkLbl').textContent = st === 'memorize' ? '記憶時間' : st === 'select' ? '選牌時間' : '';
+    // 公牌
+    [...$('pkComm').children].forEach((el, i) => { const c = pk.community && pk.community[i]; el.classList.toggle('up', !!c); pkFace(el, c || null); });
+    // 蠟印：每位玩家一種顏色
+    const bySlot = {};
+    s.players.forEach((p, pi) => (p.pick || []).forEach(idx => { (bySlot[idx] = bySlot[idx] || []).push({ pi, p }); }));
+    const faceUp = !!pk.board;
+    const picked = new Set(Object.keys(bySlot).map(Number));
+    let order = 0;
+    [...$('pkGrid').children].forEach((el, i) => {
+      const c = pk.board ? pk.board[i] : null;
+      el.classList.toggle('up', faceUp);
+      el.classList.toggle('dim', st === 'result' && !picked.has(i));
+      el.classList.toggle('mine', !!me && (me.pick || []).includes(i) && st === 'select');
+      el.classList.toggle('off', !canPick);
+      el.disabled = !canPick;
+      el.style.setProperty('--d', st === 'result' ? (picked.has(i) ? (0.12 * order++) + 's' : '0.9s') : '0s');
+      pkFace(el, c);
+      const list = bySlot[i] || [];
+      const pos = SEAL_POS[Math.min(4, list.length)] || [];
+      pkSeals(el, list.map((x, k) => ({ key: x.p.pub, color: PK_COLORS[x.pi % 4], ch: [...x.p.name][0] || '?', ox: (pos[k] || [0, 0])[0], oy: (pos[k] || [0, 0])[1], uy: k * 20 })));
+    });
+    // 圖例：誰是什麼顏色、選了幾張
+    $('pkLegend').innerHTML = s.players.map((p, pi) => {
+      const note = st === 'result' ? (p.timedOut ? '逾時' : p.out ? '退出' : p.wins + ' 勝') : p.out ? (p.timedOut ? '逾時' : '退出') : st === 'select' ? (p.locked ? '已鎖定' : p.pickN + ' / 2') : st === 'reveal' ? '已鎖定' : p.wins ? p.wins + ' 勝' : '';
+      return '<span style="--sc:' + PK_COLORS[pi % 4] + '"><i></i><b>' + esc(p.name) + (p.me ? '（你）' : '') + '</b>' + (note ? ' ' + note : '') + '</span>';
+    }).join('');
+    // 結果
+    if (st === 'result' && pk.hands) {
+      const win = new Set(s.result.winners);
+      const comm = new Set(pk.community.map(c => c.id));
+      let html = s.players.map((p, pi) => {
+        const h = pk.hands.find(x => x.pub === p.pub);
+        const head = '<div class="hh"><span class="nm" style="--sc:' + PK_COLORS[pi % 4] + '"><i></i>' + esc(p.name) + (p.me ? '（你）' : '') + (win.has(p.pub) ? ' 🏆' : '') + '</span>';
+        if (!h) return '<div class="hand">' + head + '<span class="na">' + (p.timedOut ? '逾時沒選完' : '已退出') + '</span></div></div>';
+        return '<div class="hand' + (win.has(p.pub) ? ' win' : '') + '">' + head + '<span class="cat">' + h.zh + '<small>' + h.en + '</small></span></div>'
+          + '<div class="five">' + h.cards.map(c => '<div class="' + cardCls(c) + (comm.has(c.id) ? '' : ' pickd') + '" style="--c:' + PK_COLORS[pi % 4] + '">' + faceHTML(c) + '</div>').join('') + '</div></div>';
+      }).join('');
+      setHTML($('pkRes'), html);
+    } else setHTML($('pkRes'), '');
+  }
+
+  // 頂部投降 / 離開
+  const q = $('quitBtn');
+  if (!q.classList.contains('arm')) q.textContent = me && !me.out && (s.phase === 'playing') ? '投降' : '離開';
+  show('quitBtn', !(over && !spec));
+
+  show('overPanel', over);
+  if (over) renderPokerOver(s); else pkLastStage = pk ? pk.stage : '';
+  renderActs(s);
+  renderPokerDock(s);
+  renderChat();
+  tick();
+}
+function renderPokerDock(s) {
+  const me = myPlayer(s), pk = s.pk;
+  const show_ = !!(me && pk && pk.stage === 'select' && !me.out);
+  show('pkDock', show_);
+  if (show_) {
+    const n = (me.pick || []).length;
+    const btn = $('pkLock');
+    btn.disabled = me.locked || n !== 2;
+    btn.textContent = me.locked ? '已鎖定，等其他人' : n === 2 ? '鎖定選擇' : '再選 ' + (2 - n) + ' 張';
+    const note = Date.now() < pkNoteUntil ? pkNoteText : '';
+    $('pkMsg').className = note ? 'err' : '';
+    $('pkMsg').textContent = note || (me.locked ? '選擇已送出' : n === 2 ? '確認後就不能更改' : '點牌背放上蠟印，再點一次可以取消');
+  }
+  show('dock', show_ || s.phase === 'over' || !$('roomActs').classList.contains('hide'));
+}
+function renderPokerOver(s) {
+  const r = s.result, spec = isSpec(s), me = myPlayer(s), pk = s.pk;
+  const iWon = me && r.winners.includes(me.pub);
+  let title, cls = '', why = '';
+  if (pk && pk.tie) { title = '平手'; why = '最強的牌型完全相同，稍後自動重打一局'; }
+  else if (!r.winners.length) { title = '沒有人完成選牌'; }
+  else if (spec) title = r.names.join('、') + ' 獲勝';
+  else if (iWon) { title = '你贏了'; cls = 'win'; }
+  else { title = '你輸了'; cls = 'lose'; }
+  if (r.reason === 'othersOut') why = '其他人都退出或逾時了';
+  else if (r.reason === 'poker' && pk) why = pk.why;
+  $('overTitle').textContent = title; $('overTitle').className = 'otitle ' + cls;
+  $('overWhy').textContent = why;
+  show('reveal', false); // 勝場已經顯示在上面的名單裡
+  if (pk && pk.stage === 'result' && pkLastStage !== 'result') setTimeout(() => { if (S && S.pk && S.pk.stage === 'result') $('sheet').scrollTo({ top: $('sheet').scrollHeight, behavior: 'smooth' }); }, 1900);
+  pkLastStage = pk ? pk.stage : '';
+}
+$('pkGrid').addEventListener('click', e => {
+  const b = e.target.closest('.pc'); if (!b || b.disabled || !S) return;
+  pkTap(Number(b.dataset.i));
+});
+async function pkTap(i) {
+  const s = S, me = myPlayer(s);
+  if (!me || !s.pk || s.pk.stage !== 'select' || me.locked || me.out) return;
+  const had = me.pick.includes(i);
+  if (!had && me.pick.length >= 2) { pkNote('最多選 2 張，先點已選的牌取消'); return; }
+  me.pick = had ? me.pick.filter(x => x !== i) : me.pick.concat(i); // 先在畫面上反應，再等伺服器確認
+  me.pickN = me.pick.length;
+  render();
+  try { await act('pick', { idx: i }); }
+  catch (e) {
+    if (S === s) { me.pick = had ? me.pick.concat(i) : me.pick.filter(x => x !== i); me.pickN = me.pick.length; render(); }
+    pkNote(e.message);
+  }
+}
+$('pkLock').onclick = async () => {
+  try { await act('lock'); } catch (e) { pkNote(e.message); }
+};
 
 // ---------- 啟動 ----------
 (function boot() {
